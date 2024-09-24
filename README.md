@@ -1,1 +1,1 @@
-# TCGCSS_Mods
+# Mods for TCG Card Shop Simulator
