@@ -18,7 +18,6 @@ namespace FastWorkbench
         private void Awake()
         {
             Log = Logger;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
             EnableMod = Config.Bind("Fast Workbench",
                                     "Enable Mod",
@@ -44,7 +43,7 @@ namespace FastWorkbench
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
         }
 
         private void OnDisable()

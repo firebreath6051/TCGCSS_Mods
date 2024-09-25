@@ -19,8 +19,8 @@ namespace CardChanceCheat
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(CGameData), nameof(CGameData.PropagateLoadData))]
-        private static void CGameData_PropagateLoadData_Postfix(ref CGameData __instance)
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
+        private static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
         {
             Plugin.DataCollectPermanent = CPlayerData.m_GameReportDataCollectPermanent;
             Plugin.DataWasSaved = true;
@@ -183,6 +183,7 @@ namespace CardChanceCheat
             CardUISetting cardUISetting = InventoryBase.GetCardUISetting(cardExpansionType);
             bool openPackCanUseRarity = cardUISetting.openPackCanUseRarity;
             bool openPackCanHaveDuplicate = cardUISetting.openPackCanHaveDuplicate;
+            Plugin.L($"All possible Monsters in Ghost packs:");
             for (int i = 0; i < shownMonsterList.Count; i++)
             {
                 MonsterData monsterData = InventoryBase.GetMonsterData(shownMonsterList[i]);
@@ -205,6 +206,7 @@ namespace CardChanceCheat
                 {
                     list2.Add(monsterType);
                 }
+                Plugin.L($"{i}: Name: {monsterData.Name}");
             }
             int commonCardCounter = 0;
             int rareCardCounter = 0;

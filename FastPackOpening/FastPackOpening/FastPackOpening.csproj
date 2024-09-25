@@ -7,11 +7,15 @@
     <Version>1.0.7</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <BaseOutputPath>C:\Users\diogo\source\repos\TCGCSS_Mods\bin</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="bin\**" />
     <Compile Remove="libs\**" />
+    <EmbeddedResource Remove="bin\**" />
     <EmbeddedResource Remove="libs\**" />
+    <None Remove="bin\**" />
     <None Remove="libs\**" />
   </ItemGroup>
 
@@ -28,306 +32,103 @@
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>libs\0Harmony.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\TCGCSS_Mods\libs\Assembly-CSharp.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>libs\BepInEx.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="BepInEx.Harmony">
-      <HintPath>..\..\TCGCSS_Mods\libs\BepInEx.Harmony.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>..\..\TCGCSS_Mods\libs\netstandard.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\TCGCSS_Mods\libs\Newtonsoft.Json.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\TCGCSS_Mods\libs\Unity.TextMeshPro.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AccessibilityModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AccessibilityModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AIModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AIModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AndroidJNIModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AndroidJNIModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AnimationModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ARModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ARModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AssetBundleModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.AudioModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ClothModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ClothModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterInputModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ClusterInputModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ClusterRendererModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ClusterRendererModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.CoreModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.CrashReportingModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.CrashReportingModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.DirectorModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.DirectorModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.DSPGraphModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.DSPGraphModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.GameCenterModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.GameCenterModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.GIModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.GIModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.GridModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.GridModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.HotReloadModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.HotReloadModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ImageConversionModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.IMGUIModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.InputLegacyModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.InputModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.InputModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.JSONSerializeModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.LocalizationModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.LocalizationModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.NVIDIAModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.NVIDIAModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ParticleSystemModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.PerformanceReportingModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.PerformanceReportingModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.Physics2DModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.PhysicsModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ProfilerModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ProfilerModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.ScreenCaptureModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SharedInternalsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.SharedInternalsModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.SpriteMaskModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteShapeModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.SpriteShapeModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.StreamingModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.StreamingModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SubstanceModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.SubstanceModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.SubsystemsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.SubsystemsModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TerrainModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TerrainModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TerrainPhysicsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TerrainPhysicsModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TextCoreFontEngineModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TextCoreTextEngineModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TextRenderingModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TilemapModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TilemapModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.TLSModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.TLSModule.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UI.dll</HintPath>
-      <Private>false</Private>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UIElementsModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="mscorlib">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UIElementsNativeModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UIElementsNativeModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UIModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Core">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UmbraModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UmbraModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Data">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UNETModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UNETModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Drawing">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.IO.Compression.FileSystem">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UnityAnalyticsModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Numerics">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UnityConnectModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityConnectModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Runtime.Serialization">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UnityCurlModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityCurlModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Xml">
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UnityTestProtocolModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityTestProtocolModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityWebRequestModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.VehiclesModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VFXModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.VFXModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VideoModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.VideoModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VirtualTexturingModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.VirtualTexturingModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.VRModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.VRModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.WindModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.WindModule.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="UnityEngine.XRModule">
-      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.XRModule.dll</HintPath>
-      <Private>false</Private>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Xml.Linq">
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 </Project>

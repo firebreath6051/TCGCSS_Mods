@@ -17,7 +17,6 @@ namespace NoSmellyCustomers
         private void Awake()
         {
             Log = Logger;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
             EnableMod = Config.Bind("No Smelly Customers",
                                     "Enable Mod",
@@ -28,7 +27,7 @@ namespace NoSmellyCustomers
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
         }
 
         private void OnDisable()

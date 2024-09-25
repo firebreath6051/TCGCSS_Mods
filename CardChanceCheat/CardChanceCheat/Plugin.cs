@@ -28,7 +28,6 @@ namespace CardChanceCheat
         private void Awake()
         {
             Log = Logger;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
             EnableMod = Config.Bind("Cheat Chances",
                                     "Enable mod",
@@ -80,7 +79,7 @@ namespace CardChanceCheat
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
         }
 
         private void OnDisable()
@@ -90,15 +89,24 @@ namespace CardChanceCheat
         }
         private void Update()
         {
-            if (EnableMod.Value && DataWasSaved)
+            if (EnableMod.Value)
             {
-                 if (!CPlayerData.m_GameReportDataCollectPermanent.Equals(DataCollectPermanent))
+                RevertData();
+            }
+        }
+
+        private void RevertData(bool showLog = false)
+        {
+            if (DataWasSaved)
+            {
+                if (!CPlayerData.m_GameReportDataCollectPermanent.Equals(DataCollectPermanent))
                 {
                     CPlayerData.m_GameReportDataCollectPermanent = DataCollectPermanent;
-                    L("Data reverted");
+                    if (showLog) L("Data reverted");
                 }
             }
         }
+
         internal static void L(string message, bool info = false)
         {
             if (info)

@@ -2,9 +2,7 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using System.Reflection;
-using UnityEngine;
 
 namespace PhoneStats
 {
@@ -17,7 +15,6 @@ namespace PhoneStats
         private void Awake()
         {
             Log = Logger;
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
             EnableMod = Config.Bind("Phone Stats",
                                     "Enable Mod",
@@ -28,7 +25,7 @@ namespace PhoneStats
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
         }
 
         private void OnDisable()

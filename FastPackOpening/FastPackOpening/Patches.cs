@@ -147,8 +147,7 @@ namespace FastPackOpening
                     transformsList.Add(newTransform);
                 }
             }
-
-            return true;
+             return true;
         }
 
         [HarmonyTranspiler]
@@ -249,13 +248,6 @@ namespace FastPackOpening
             if (PackSpeedMultiplier != (Plugin.SpeedMultiplierValue - __instance.m_MultiplierStateTimer))
             {
                 PackSpeedMultiplier = Mathf.Clamp(Plugin.SpeedMultiplierValue - __instance.m_MultiplierStateTimer, 0f, Plugin.SpeedMultiplierValue);
-            }
-
-            LogTimer += Time.deltaTime;
-            if (LogTimer > 0.5f)
-            {
-                Plugin.L($"Current State: {__instance.m_StateIndex}");
-                LogTimer = 0f;
             }
 
             __instance.m_IsAutoFire = false;
@@ -458,7 +450,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_HighValueCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             __instance.m_IsGetHighValueCard = true;
@@ -469,7 +461,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             return false;
@@ -497,7 +489,7 @@ namespace FastPackOpening
                         {
                             SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num5, 1f + num4);
                         }
-                        if (__instance.m_CurrentOpenedCardIndex >= 7)
+                        if (__instance.m_CurrentOpenedCardIndex >= 10)
                         {
                             __instance.m_StateIndex = 7;
                         }
@@ -556,7 +548,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_HighValueCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             __instance.m_IsGetHighValueCard = true;
@@ -567,7 +559,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             return false;

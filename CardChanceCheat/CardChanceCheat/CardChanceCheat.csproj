@@ -7,11 +7,15 @@
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <BaseOutputPath>C:\Users\diogo\source\repos\TCGCSS_Mods\bin</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="bin\**" />
     <Compile Remove="libs\**" />
+    <EmbeddedResource Remove="bin\**" />
     <EmbeddedResource Remove="libs\**" />
+    <None Remove="bin\**" />
     <None Remove="libs\**" />
   </ItemGroup>
 
@@ -36,6 +40,7 @@
     </Reference>
     <Reference Include="netstandard">
       <HintPath>..\..\TCGCSS_Mods\libs\netstandard.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.dll</HintPath>
@@ -43,6 +48,66 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="mscorlib">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Core">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Data">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Drawing">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.IO.Compression.FileSystem">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Numerics">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Runtime.Serialization">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Xml">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Update="System.Xml.Linq">
       <Private>False</Private>
     </Reference>
   </ItemGroup>

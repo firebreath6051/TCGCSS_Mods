@@ -25,7 +25,7 @@ namespace MovableTrashBin
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded!");
+            L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
         }
 
         private void OnDisable()
