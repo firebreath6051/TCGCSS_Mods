@@ -16,6 +16,7 @@ namespace PrintAllCards
         private static ManualLogSource Log { get; set; }
         public static ConfigEntry<bool> EnableMod { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> PrintCardDataKey { get; private set; }
+        internal static ConfigEntry<KeyboardShortcut> SaveDataKey { get; private set; }
         private void Awake()
         {
             Log = Logger;
@@ -23,12 +24,17 @@ namespace PrintAllCards
             EnableMod = Config.Bind("Print ALl Card Data",
                                     "Enable Mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 2 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 3 }));
 
             PrintCardDataKey = Config.Bind("Print ALl Card Data",
-                                   "Auto open key",
+                                   "Print card data key",
                                    new KeyboardShortcut(KeyCode.P),
-                                   new ConfigDescription("Key to print card data to json file.", null, new ConfigurationManagerAttributes { Order = 1 }));
+                                   new ConfigDescription("Key to print card data to json file.", null, new ConfigurationManagerAttributes { Order = 2 }));
+
+            SaveDataKey = Config.Bind("Print ALl Card Data",
+                                   "Save savegame data key",
+                                   new KeyboardShortcut(KeyCode.PageDown),
+                                   new ConfigDescription("Saves the current savegame data to a json file.", null, new ConfigurationManagerAttributes { Order = 1 }));
         }
 
         private void OnEnable()
@@ -45,7 +51,11 @@ namespace PrintAllCards
 
         private void Update()
         {
-            if (!Plugin.EnableMod.Value) return;
+            if (!EnableMod.Value) return;
+            if (SaveDataKey.Value.IsDown())
+            {
+                JsonHandler.WriteSaveDataToFile(Patches.GameDataDupe);
+            }
             if (PrintCardDataKey.Value.IsDown())
             {
                 if (Patches.MonsterDatas.Count > 0)

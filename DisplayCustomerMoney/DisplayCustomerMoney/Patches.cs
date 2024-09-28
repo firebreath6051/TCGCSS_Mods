@@ -15,6 +15,13 @@ namespace DisplayCustomerMoney
             }
             for (int i = 0; i < CSingleton<CustomerManager>.Instance.m_CustomerList.Count; i++)
             {
+                if (CSingleton<PricePopupSpawner>.Instance.m_PricePopupList.Count < CSingleton<CustomerManager>.Instance.m_CustomerList.Count)
+                {
+                    for (int j = 0; j < (CSingleton<CustomerManager>.Instance.m_CustomerList.Count - CSingleton<PricePopupSpawner>.Instance.m_PricePopupList.Count); j++)
+                    {
+                        CSingleton<PricePopupSpawner>.Instance.m_PricePopupList.Add(new PricePopupUI());
+                    }
+                }
                 for (int j = 0; j < CSingleton<PricePopupSpawner>.Instance.m_PricePopupList.Count; j++)
                 {
                     if (!CSingleton<PricePopupSpawner>.Instance.m_PricePopupList[j].gameObject.activeSelf)
@@ -30,7 +37,5 @@ namespace DisplayCustomerMoney
                 }
             }
         }
-
-
     }
 }

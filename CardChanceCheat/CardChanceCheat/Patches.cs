@@ -1,8 +1,8 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Reflection;
-using System;
+using System.Reflection.Emit;
+using UnityEngine;
 
 namespace CardChanceCheat
 {
@@ -23,7 +23,14 @@ namespace CardChanceCheat
         private static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
         {
             Plugin.DataCollectPermanent = CPlayerData.m_GameReportDataCollectPermanent;
-            Plugin.DataWasSaved = true;
+            if (Plugin.DataCollectPermanent.storeLevelGained <= 1 && Plugin.DataCollectPermanent.customerVisited <= 1)
+            {
+                Plugin.DataWasSaved = false;
+            }
+            else
+            {
+                Plugin.DataWasSaved = true;
+            }
 
             return;
         }
@@ -32,8 +39,6 @@ namespace CardChanceCheat
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen))]
         private static bool CardOpeningSequence_OpenScreen_Prefix(ref CardOpeningSequence __instance, ECollectionPackType collectionPackType, bool isMultiPack, bool isPremiumPack = false)
         {
-            if (!Plugin.EnableMod.Value) return true;
-
             __instance.m_IsScreenActive = true;
             __instance.m_CollectionPackType = collectionPackType;
             __instance.m_IsNewlList.Clear();
@@ -59,33 +64,174 @@ namespace CardChanceCheat
                 ECardExpansionType cardExpansionType = InventoryBase.GetCardExpansionType(collectionPackType);
                 if (cardExpansionType == ECardExpansionType.Tetramon || cardExpansionType == ECardExpansionType.Destiny)
                 {
-                    int num = UnityEngine.Random.Range(0, 10000);
+                    int num = Random.Range(0, 10000);
                     bool isTetramon = false;
                     if (cardExpansionType == ECardExpansionType.Tetramon)
                     {
-                        num = UnityEngine.Random.Range(0, 20000);
+                        num = Random.Range(0, 20000);
                         isTetramon = true;
                     }
-                    if (num < Plugin.GhostChance.Value * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
+                    if (Plugin.PerPackChancesValue)
                     {
-                        __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
-                        if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                        // BASIC
+                        if (collectionPackType == ECollectionPackType.BasicCardPack || collectionPackType == ECollectionPackType.DestinyBasicCardPack)
                         {
-                            if (Plugin.FullGhostPack.Value)
+                            if (num < Plugin.GhostChanceBasicValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
                             {
-                                int rolledGhostCard;
-                                for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                                if (__instance.m_SecondaryRolledCardDataList.Count > 0)
                                 {
-                                    rolledGhostCard = UnityEngine.Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
-                                    __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
-                                    __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                    if (Plugin.FullGhostPackValue)
+                                    {
+                                        int rolledGhostCard;
+                                        for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                        {
+                                            rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                            __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                            __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                        __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                    }
                                 }
                             }
-                            else
+                        }
+                        // RARE
+                        else if (collectionPackType == ECollectionPackType.RareCardPack || collectionPackType == ECollectionPackType.DestinyRareCardPack)
+                        {
+                            if (num < Plugin.GhostChanceRareValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
                             {
-                                int num2 = UnityEngine.Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
-                                __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
-                                __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                                if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                                {
+                                    if (Plugin.FullGhostPackValue)
+                                    {
+                                        int rolledGhostCard;
+                                        for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                        {
+                                            rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                            __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                            __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                        __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                    }
+                                }
+                            }
+                        }
+                        // EPIC
+                        else if (collectionPackType == ECollectionPackType.EpicCardPack || collectionPackType == ECollectionPackType.DestinyEpicCardPack)
+                        {
+                            if (num < Plugin.GhostChanceEpicValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
+                            {
+                                __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                                if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                                {
+                                    if (Plugin.FullGhostPackValue)
+                                    {
+                                        int rolledGhostCard;
+                                        for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                        {
+                                            rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                            __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                            __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                        __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                    }
+                                }
+                            }
+                        }
+                        // LEGEND
+                        else if (collectionPackType == ECollectionPackType.LegendaryCardPack || collectionPackType == ECollectionPackType.DestinyLegendaryCardPack)
+                        {
+                            if (num < Plugin.GhostChanceLegendValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
+                            {
+                                __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                                if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                                {
+                                    if (Plugin.FullGhostPackValue)
+                                    {
+                                        int rolledGhostCard;
+                                        for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                        {
+                                            rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                            __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                            __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                        __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                    }
+                                }
+                            }
+                        }
+                        // NOT ANY OF THE ABOVE
+                        else
+                        {
+                            if (num < Plugin.GhostChanceValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
+                            {
+                                __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                                if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                                {
+                                    if (Plugin.FullGhostPackValue)
+                                    {
+                                        int rolledGhostCard;
+                                        for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                        {
+                                            rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                            __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                            __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                        __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (num < Plugin.GhostChanceValue * (isTetramon ? 200 : 100) && CPlayerData.m_ShopLevel > 1)
+                        {
+                            __instance.GetPackContent(true, isPremiumPack, true, ECollectionPackType.GhostPack);
+                            if (__instance.m_SecondaryRolledCardDataList.Count > 0)
+                            {
+                                if (Plugin.FullGhostPackValue)
+                                {
+                                    int rolledGhostCard;
+                                    for (int i = 0; i < __instance.m_RolledCardDataList.Count; i++)
+                                    {
+                                        rolledGhostCard = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                        __instance.m_RolledCardDataList[i] = __instance.m_SecondaryRolledCardDataList[rolledGhostCard];
+                                        __instance.m_CardValueList[i] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[rolledGhostCard]);
+                                    }
+                                }
+                                else
+                                {
+                                    int num2 = Random.Range(0, __instance.m_SecondaryRolledCardDataList.Count);
+                                    __instance.m_RolledCardDataList[__instance.m_RolledCardDataList.Count - 1] = __instance.m_SecondaryRolledCardDataList[num2];
+                                    __instance.m_CardValueList[__instance.m_RolledCardDataList.Count - 1] = CPlayerData.GetCardMarketPrice(__instance.m_SecondaryRolledCardDataList[num2]);
+                                }
                             }
                         }
                     }
@@ -151,12 +297,200 @@ namespace CardChanceCheat
             return false;
         }
 
-        [HarmonyPrefix]
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent))]
+        private static IEnumerable<CodeInstruction> CardOpeningSequence_GetPackContent_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            bool exWasAssigned = false;
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode == OpCodes.Ldc_R4)
+                {
+                    if ((float)codes[i].operand == 5f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("Foil")));
+                        continue;
+                    }
+                    else if ((float)codes[i].operand == 20f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("FirstEd")));
+                        continue;
+                    }
+                    else if ((float)codes[i].operand == 8f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("Silver")));
+                        continue;
+                    }
+                    else if ((float)codes[i].operand == 4f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("Gold")));
+                        continue;
+                    }
+                    else if ((float)codes[i].operand == 1f && !exWasAssigned)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("EX")));
+                        exWasAssigned = true;
+                        continue;
+                    }
+                    else if ((float)codes[i].operand == 0.25f)
+                    {
+                        codes[i] = new CodeInstruction(OpCodes.Ldarg_0);
+                        codes.Insert(i + 1, new CodeInstruction(OpCodes.Call, GetPackTypeSpecificValue("FullArt")));
+                        continue;
+                    }
+                }
+            }
+            return codes;
+        }
+        private static MethodInfo GetPackTypeSpecificValue(string chanceType)
+        {
+            return typeof(Patches).GetMethod($"{chanceType}ChanceValueForCurrentPack", BindingFlags.Static | BindingFlags.Public);
+        }
+
+        public static float FoilChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.FoilChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.FoilChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.FoilChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.FoilChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.FoilChanceLegendValue;
+                default:
+                    return Plugin.FoilChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+        public static float FirstEdChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.FirstEdChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.FirstEdChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.FirstEdChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.FirstEdChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.FirstEdChanceLegendValue;
+                default:
+                    return Plugin.FirstEdChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+        public static float SilverChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.SilverChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.SilverChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.SilverChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.SilverChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.SilverChanceLegendValue;
+                default:
+                    return Plugin.SilverChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+        public static float GoldChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.GoldChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.GoldChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.GoldChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.GoldChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.GoldChanceLegendValue;
+                default:
+                    return Plugin.GoldChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+        public static float EXChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.EXChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.EXChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.EXChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.EXChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.EXChanceLegendValue;
+                default:
+                    return Plugin.EXChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+        public static float FullArtChanceValueForCurrentPack(CardOpeningSequence instance)
+        {
+            if (!Plugin.PerPackChancesValue) return Plugin.FullArtChanceValue;
+
+            switch (instance.m_CollectionPackType)
+            {
+                case ECollectionPackType.BasicCardPack:
+                case ECollectionPackType.DestinyBasicCardPack:
+                    return Plugin.FullArtChanceBasicValue;
+                case ECollectionPackType.RareCardPack:
+                case ECollectionPackType.DestinyRareCardPack:
+                    return Plugin.FullArtChanceRareValue;
+                case ECollectionPackType.EpicCardPack:
+                case ECollectionPackType.DestinyEpicCardPack:
+                    return Plugin.FullArtChanceEpicValue;
+                case ECollectionPackType.LegendaryCardPack:
+                case ECollectionPackType.DestinyLegendaryCardPack:
+                    return Plugin.FullArtChanceLegendValue;
+                default:
+                    return Plugin.FullArtChanceValue;  // Default to non-pack specific value if no matching type is found
+            }
+        }
+
+        /*[HarmonyPrefix]
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent))]
         private static bool CardOpeningSequence_GetPackContent_Prefix(ref CardOpeningSequence __instance, bool clearList, bool isPremiumPack, bool isSecondaryRolledData = false, ECollectionPackType overrideCollectionPackType = ECollectionPackType.None)
         {
-            if (!Plugin.EnableMod.Value) return true;
-
             if (clearList)
             {
                 if (isSecondaryRolledData)
@@ -183,7 +517,6 @@ namespace CardChanceCheat
             CardUISetting cardUISetting = InventoryBase.GetCardUISetting(cardExpansionType);
             bool openPackCanUseRarity = cardUISetting.openPackCanUseRarity;
             bool openPackCanHaveDuplicate = cardUISetting.openPackCanHaveDuplicate;
-            Plugin.L($"All possible Monsters in Ghost packs:");
             for (int i = 0; i < shownMonsterList.Count; i++)
             {
                 MonsterData monsterData = InventoryBase.GetMonsterData(shownMonsterList[i]);
@@ -206,7 +539,6 @@ namespace CardChanceCheat
                 {
                     list2.Add(monsterType);
                 }
-                Plugin.L($"{i}: Name: {monsterData.Name}");
             }
             int commonCardCounter = 0;
             int rareCardCounter = 0;
@@ -263,7 +595,7 @@ namespace CardChanceCheat
             int currentCardIndex = 0;
             while (currentCardIndex < maxCardsPerPack && list.Count > 0)
             {
-                int rolledCard = UnityEngine.Random.Range(0, list.Count);
+                int rolledCard = Random.Range(0, list.Count);
                 if (legendaryCardsNum - legendaryCardCounter > 0 && list5.Count > 0)
                 {
                     erarity = ERarity.Legendary;
@@ -286,7 +618,7 @@ namespace CardChanceCheat
                 }
                 else
                 {
-                    int randomRoll = UnityEngine.Random.Range(0, 10000);
+                    int randomRoll = Random.Range(0, 10000);
                     int legendaryAmountMax = 4 - rareCardCounter;
                     int epicAmountMax = 4 - epicCardCounter;
                     int rareAmountMax = 4 - legendaryCardCounter;
@@ -332,7 +664,7 @@ namespace CardChanceCheat
                 {
                     if (erarity == ERarity.Legendary)
                     {
-                        rolledCard = UnityEngine.Random.Range(0, list5.Count);
+                        rolledCard = Random.Range(0, list5.Count);
                         monsterType2 = (int)list5[rolledCard];
                         if (!openPackCanHaveDuplicate)
                         {
@@ -341,7 +673,7 @@ namespace CardChanceCheat
                     }
                     else if (erarity == ERarity.Epic)
                     {
-                        rolledCard = UnityEngine.Random.Range(0, list4.Count);
+                        rolledCard = Random.Range(0, list4.Count);
                         monsterType2 = (int)list4[rolledCard];
                         if (!openPackCanHaveDuplicate)
                         {
@@ -350,7 +682,7 @@ namespace CardChanceCheat
                     }
                     else if (erarity == ERarity.Rare)
                     {
-                        rolledCard = UnityEngine.Random.Range(0, list3.Count);
+                        rolledCard = Random.Range(0, list3.Count);
                         monsterType2 = (int)list3[rolledCard];
                         if (!openPackCanHaveDuplicate)
                         {
@@ -359,7 +691,7 @@ namespace CardChanceCheat
                     }
                     else
                     {
-                        rolledCard = UnityEngine.Random.Range(0, list2.Count);
+                        rolledCard = Random.Range(0, list2.Count);
                         monsterType2 = (int)list2[rolledCard];
                         if (!openPackCanHaveDuplicate)
                         {
@@ -369,7 +701,7 @@ namespace CardChanceCheat
                 }
                 else
                 {
-                    rolledCard = UnityEngine.Random.Range(0, list.Count);
+                    rolledCard = Random.Range(0, list.Count);
                     monsterType2 = (int)list[rolledCard];
                     if (!openPackCanHaveDuplicate)
                     {
@@ -378,7 +710,7 @@ namespace CardChanceCheat
                 }
                 CardData cardData = new CardData();
                 cardData.monsterType = (EMonsterType)monsterType2;
-                if (UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(foilChance * 100f))
+                if (Random.Range(0, 10000) < Mathf.RoundToInt(foilChance * 100f))
                 {
                     cardData.isFoil = true;
                     __instance.m_HasFoilCard = true;
@@ -393,27 +725,27 @@ namespace CardChanceCheat
                     __instance.m_HasFoilCard = true;
                 }
                 bool isBorderTypeChosen = false;
-                if (UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(fullArtChance * 100f))
+                if (Random.Range(0, 10000) < Mathf.RoundToInt(fullArtChance * 100f))
                 {
                     borderType = ECardBorderType.FullArt;
                     isBorderTypeChosen = true;
                 }
-                if (!isBorderTypeChosen && UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(exChance * 100f))
+                if (!isBorderTypeChosen && Random.Range(0, 10000) < Mathf.RoundToInt(exChance * 100f))
                 {
                     borderType = ECardBorderType.EX;
                     isBorderTypeChosen = true;
                 }
-                if (!isBorderTypeChosen && UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(goldChance * 100f))
+                if (!isBorderTypeChosen && Random.Range(0, 10000) < Mathf.RoundToInt(goldChance * 100f))
                 {
                     borderType = ECardBorderType.Gold;
                     isBorderTypeChosen = true;
                 }
-                if (!isBorderTypeChosen && UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(silverChance * 100f))
+                if (!isBorderTypeChosen && Random.Range(0, 10000) < Mathf.RoundToInt(silverChance * 100f))
                 {
                     borderType = ECardBorderType.Silver;
                     isBorderTypeChosen = true;
                 }
-                if (!isBorderTypeChosen && UnityEngine.Random.Range(0, 10000) < Mathf.RoundToInt(firstEditionChance * 100f))
+                if (!isBorderTypeChosen && Random.Range(0, 10000) < Mathf.RoundToInt(firstEditionChance * 100f))
                 {
                     borderType = ECardBorderType.FirstEdition;
                     isBorderTypeChosen = true;
@@ -434,7 +766,7 @@ namespace CardChanceCheat
                 }
                 else if (cardData.expansionType == ECardExpansionType.Ghost)
                 {
-                    int ghostDestinyRand = UnityEngine.Random.Range(0, 100);
+                    int ghostDestinyRand = Random.Range(0, 100);
                     cardData.isDestiny = (ghostDestinyRand < 50);
                 }
                 else
@@ -454,6 +786,6 @@ namespace CardChanceCheat
             }
 
             return false;
-        }
+        }*/
     }
 }

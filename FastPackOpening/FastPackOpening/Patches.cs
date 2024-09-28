@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using System.Reflection.Emit;
 using TMPro;
+using System;
 
 namespace FastPackOpening
 {
@@ -127,45 +128,56 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
         {
-            if (__instance.m_HoldCardPackPosList.Count < 64)
-            {
-                List<Transform> transformsList = __instance.m_HoldCardPackPosList;
-                Transform baseTransform = __instance.m_HoldCardPackPosList.Last();
-                Vector3 basePosition = baseTransform.position;
-                Vector3 lastDelta = transformsList[transformsList.Count - 1].position - transformsList[transformsList.Count - 2].position;
+            if (!Plugin.EnableMod.Value) return true;
 
-                for (int i = 0; i < 54; i++)
-                {
-                    Vector3 newPosition = transformsList[transformsList.Count - 1].position + lastDelta;
-                    newPosition = basePosition + (newPosition - basePosition);
-                    GameObject newGameObject = new GameObject("HoldPackPositionLoc (" + (transformsList.Count) + ")");
-                    Transform newTransform = newGameObject.transform;
-                    newTransform.parent = baseTransform;
-                    newTransform.rotation = baseTransform.rotation;
-                    newTransform.localScale = baseTransform.localScale;
-                    newTransform.position = newPosition;
-                    transformsList.Add(newTransform);
-                }
+            if (Plugin.IsFirstRun)
+            {
+                Plugin.MovePackPositions();
             }
-             return true;
+
+            return true;
         }
 
         [HarmonyTranspiler]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf))]
-        public static IEnumerable<CodeInstruction> InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
-            if (!Plugin.EnableMod.Value || !Plugin.EnableMaxHoldPacksValue) return instructions;
+            var codes = new List<CodeInstruction>(instructions);
 
-            var code = new List<CodeInstruction>(instructions);
+            var getEnableModValue = AccessTools.Property(typeof(Plugin), nameof(Plugin.EnableModValue))?.GetGetMethod();
+            var getEnableMaxHoldPacksValue = AccessTools.Property(typeof(Plugin), nameof(Plugin.EnableMaxHoldPacksValue))?.GetGetMethod();
+            var getMaxHoldPacksValue = AccessTools.Property(typeof(Plugin), nameof(Plugin.MaxHoldPacksValue))?.GetGetMethod();
 
-            for (int i = 0; i < code.Count; i++)
+            var labelOriginalValue = generator.DefineLabel();
+            var labelContinue = generator.DefineLabel();
+
+            List<CodeInstruction> newCode = new List<CodeInstruction>()
             {
-                if (code[i].opcode == OpCodes.Ldc_I4_8)
+                new CodeInstruction(OpCodes.Call, getEnableModValue),
+                new CodeInstruction(OpCodes.Call, getEnableMaxHoldPacksValue),
+                new CodeInstruction(OpCodes.And),
+                new CodeInstruction(OpCodes.Brfalse_S, labelOriginalValue),
+                new CodeInstruction(OpCodes.Call, getMaxHoldPacksValue),
+                new CodeInstruction(OpCodes.Br_S, labelContinue)
+            };
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                var code = codes[i];
+
+                if (code.opcode == OpCodes.Ldc_I4_8 || (code.opcode == OpCodes.Ldc_I4 && (int)code.operand == 8))
                 {
-                    code[i] = new CodeInstruction(OpCodes.Call, AccessTools.Property(typeof(Plugin), "MaxHoldPacksValue").GetGetMethod());
+                    if (i + 1 < codes.Count && codes[i + 1].opcode.Name.StartsWith("stloc"))
+                    {
+                        codes[i].labels.Add(labelOriginalValue);
+                        codes[i + 1].labels.Add(labelContinue);
+                        codes.InsertRange(i, newCode);
+
+                        i += newCode.Count + 1;
+                    }
                 }
             }
-            return code;
+            return codes.AsEnumerable();
         }
 
         [HarmonyPrefix]
@@ -219,7 +231,8 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.Update))]
         public static bool CardOpeningSequence_Update_Prefix(ref CardOpeningSequence __instance)
         {
-            if (!Plugin.EnableMod.Value) {
+            if (!Plugin.EnableMod.Value)
+            {
                 __instance.m_HighValueCardThreshold = 10f;
                 __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq1_RotateToFront"].speed = 1f;
                 __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq0_Idle"].speed = 1f;
@@ -446,6 +459,7 @@ namespace FastPackOpening
                             {
                                 IsAutoOpen = false;
                                 DelayAutoOpen = true;
+                                __instance.m_IsAutoFireKeydown = false;
                             }
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
@@ -544,6 +558,7 @@ namespace FastPackOpening
                             {
                                 IsAutoOpen = false;
                                 DelayAutoOpen = true;
+                                __instance.m_IsAutoFireKeydown = false;
                             }
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
@@ -762,6 +777,7 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(GameUIScreen), nameof(GameUIScreen.Update))]
         public static void GameUIScreen_Update_Postfix(ref GameUIScreen __instance)
         {
+            if (!Plugin.EnableModValue) return;
             if (holdItemCountText == null && __instance.m_DayText != null)
             {
                 DuplicateUIComponents(__instance);
@@ -803,7 +819,7 @@ namespace FastPackOpening
             holdItemCountRectTransform.anchoredPosition = Vector2.zero;
             holdItemCountRectTransform.sizeDelta = new Vector2(200, 100);
 
-            holdItemCountText = Object.Instantiate(gameUIScreen.m_DayText, holdItemCountRectTransform);
+            holdItemCountText = UnityEngine.Object.Instantiate(gameUIScreen.m_DayText, holdItemCountRectTransform);
             holdItemCountText.text = "";
             holdItemCountText.fontSizeMax = Plugin.TextSize.Value;
             holdItemCountText.fontSize = Plugin.TextSize.Value;
@@ -812,5 +828,13 @@ namespace FastPackOpening
             holdItemCountText.alignment = TextAlignmentOptions.Left;
             holdItemCountText.transform.localPosition = new Vector3(Plugin.TextPositionX.Value, Plugin.TextPositionY.Value, 0);
         }
+    }
+
+    public class TransformData
+    {
+        public Vector3 LocalPosition { get; set; }
+        public Vector3 Position { get; set; }
+        public Quaternion Rotation { get; set; }
+        public Vector3 Scale { get; set; }
     }
 }
