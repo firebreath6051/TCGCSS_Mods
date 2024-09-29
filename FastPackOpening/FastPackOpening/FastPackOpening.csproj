@@ -131,4 +131,12 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="xcopy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;D:\Games\Steam\steamapps\common\TCG Card Shop Simulator\BepInEx\plugins\FastPackOpening&quot; /Y" />
+	</Target>
+	
+	<Target Name="RunExeAfterBuild" AfterTargets="Build">
+		<Exec Command="&quot;D:\Games\Steam\Steam.exe&quot; -applaunch 3070070" />
+	</Target>
 </Project>

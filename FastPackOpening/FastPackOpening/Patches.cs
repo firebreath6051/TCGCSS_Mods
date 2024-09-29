@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Reflection.Emit;
 using TMPro;
 using System;
+using System.Reflection;
 
 namespace FastPackOpening
 {
@@ -66,7 +67,7 @@ namespace FastPackOpening
                     item3.SetMesh(itemMeshData2.mesh, itemMeshData2.material, eitemType, itemMeshData2.meshSecondary, itemMeshData2.materialSecondary);
                     item3.transform.position = __instance.m_OpenCardBoxSpawnCardPackPosList[i].position;
                     item3.transform.rotation = __instance.m_OpenCardBoxSpawnCardPackPosList[i].rotation;
-                    item3.transform.parent = __instance.m_OpenCardBoxSpawnCardPackPosList[i];
+                    item3.transform.SetParent(__instance.m_OpenCardBoxSpawnCardPackPosList[i]);
                     item3.transform.localScale = __instance.m_OpenCardBoxSpawnCardPackPosList[i].localScale;
                     item3.gameObject.SetActive(true);
                     __instance.m_HoldItemList.Add(item3);
@@ -124,18 +125,117 @@ namespace FastPackOpening
             return;
         }
 
+        /*[HarmonyPrefix]
+        [HarmonyPatch(typeof(CGameManager), nameof(CGameManager.SaveGame))]
+        public static bool CGameManager_SaveGame_Prefix(ref CGameManager __instance)
+        {
+            return true;
+        }*/
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
         {
-            if (!Plugin.EnableMod.Value) return true;
+            Plugin.L($"IsPackPositionsLoaded: {Plugin.IsPackPositionsLoaded}");
+            __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
 
-            if (Plugin.IsFirstRun)
+            if (CPlayerData.m_HoldItemTypeList.Count > 0 && CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
             {
-                Plugin.MovePackPositions();
+                List<Item> list2 = new List<Item>();
+                for (int m = 0; m < CPlayerData.m_HoldItemTypeList.Count; m++)
+                {
+                    ItemMeshData itemMeshData = InventoryBase.GetItemMeshData(CPlayerData.m_HoldItemTypeList[m]);
+                    Item item = ItemSpawnManager.GetItem(__instance.m_HoldCardPackPosList[m]);
+                    item.SetMesh(itemMeshData.mesh, itemMeshData.material, CPlayerData.m_HoldItemTypeList[m], itemMeshData.meshSecondary, itemMeshData.materialSecondary);
+                    item.transform.position = __instance.m_HoldCardPackPosList[m].position;
+                    item.transform.rotation = __instance.m_HoldCardPackPosList[m].rotation;
+                    item.SmoothLerpToTransform(__instance.m_HoldCardPackPosList[m], __instance.m_HoldCardPackPosList[m], false);
+                    item.gameObject.SetActive(true);
+                    list2.Add(item);
+                }
+                __instance.m_HoldItemList.Clear();
+                for (int n = 0; n < list2.Count; n++)
+                {
+                    __instance.m_HoldItemList.Add(list2[n]);
+                }
+                __instance.SetCurrentGameState(EGameState.HoldingItemState);
+                __instance.m_IsHoldItemMode = true;
+                if (Plugin.EnableHeldItemPositions.Value)
+                {
+                    Plugin.EnableHeldItemPositions.Value = false;
+                    Plugin.EnableHeldItemPositions.Value = true;
+                }
+                else
+                {
+                    Plugin.EnableHeldItemPositions.Value = true;
+                    Plugin.EnableHeldItemPositions.Value = false;
+                }
+                return false;
             }
+            return false;
+        }
 
-            return true;
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
+        public static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
+        {
+            CSingleton<InteractionPlayerController>.Instance.m_CameraController.SetRotationAngles(0f, -35f);
+            CSingleton<InteractionPlayerController>.Instance.m_CameraController.enabled = false;
+            if (CPlayerData.m_HoldCardDataList.Count > 7)
+            {
+                for (int j = CPlayerData.m_HoldCardDataList.Count - 1; j >= 8; j--)
+                {
+                    CPlayerData.m_HoldCardDataList.RemoveAt(j);
+                }
+            }
+            if (CPlayerData.m_HoldCardDataList.Count > 0)
+            {
+                List<InteractableCard3d> list = new List<InteractableCard3d>();
+                for (int k = 0; k < CPlayerData.m_HoldCardDataList.Count; k++)
+                {
+                    Card3dUIGroup cardUI = CSingleton<Card3dUISpawner>.Instance.GetCardUI();
+                    InteractableCard3d component = ShelfManager.SpawnInteractableObject(EObjectType.Card3d).GetComponent<InteractableCard3d>();
+                    cardUI.m_CardUI.SetCardUI(CPlayerData.m_HoldCardDataList[k]);
+                    cardUI.transform.position = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPosList[k].position;
+                    cardUI.transform.rotation = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPosList[k].rotation;
+                    component.transform.position = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPosList[k].position;
+                    component.transform.rotation = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPosList[k].rotation;
+                    component.SetCardUIFollow(cardUI);
+                    component.SetEnableCollision(false);
+                    list.Add(component);
+                }
+                CPlayerData.m_HoldCardDataList.Clear();
+                for (int l = 0; l < list.Count; l++)
+                {
+                    InteractionPlayerController.AddHoldCard(list[l]);
+                }
+                __instance.EnterHoldCardMode();
+                return;
+            }
+            if (CPlayerData.m_HoldItemTypeList.Count > 0 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
+            {
+                List<Item> list2 = new List<Item>();
+                for (int m = 0; m < CPlayerData.m_HoldItemTypeList.Count; m++)
+                {
+                    ItemMeshData itemMeshData = InventoryBase.GetItemMeshData(CPlayerData.m_HoldItemTypeList[m]);
+                    Item item = ItemSpawnManager.GetItem(__instance.m_HoldCardPackPosList[m]);
+                    item.SetMesh(itemMeshData.mesh, itemMeshData.material, CPlayerData.m_HoldItemTypeList[m], itemMeshData.meshSecondary, itemMeshData.materialSecondary);
+                    item.transform.position = __instance.m_HoldCardPackPosList[m].position;
+                    item.transform.rotation = __instance.m_HoldCardPackPosList[m].rotation;
+                    item.SmoothLerpToTransform(__instance.m_HoldCardPackPosList[m], __instance.m_HoldCardPackPosList[m], false);
+                    item.gameObject.SetActive(true);
+                    list2.Add(item);
+                }
+                __instance.m_HoldItemList.Clear();
+                for (int n = 0; n < list2.Count; n++)
+                {
+                    __instance.m_HoldItemList.Add(list2[n]);
+                }
+                __instance.SetCurrentGameState(EGameState.HoldingItemState);
+                __instance.m_IsHoldItemMode = true;
+                return;
+            }
+            return;
         }
 
         [HarmonyTranspiler]
@@ -150,6 +250,8 @@ namespace FastPackOpening
 
             var labelOriginalValue = generator.DefineLabel();
             var labelContinue = generator.DefineLabel();
+            var labelOriginalValue2 = generator.DefineLabel();
+            var labelContinue2 = generator.DefineLabel();
 
             List<CodeInstruction> newCode = new List<CodeInstruction>()
             {
@@ -160,20 +262,35 @@ namespace FastPackOpening
                 new CodeInstruction(OpCodes.Call, getMaxHoldPacksValue),
                 new CodeInstruction(OpCodes.Br_S, labelContinue)
             };
+            List<CodeInstruction> newCode2 = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Call, getEnableModValue),
+                new CodeInstruction(OpCodes.Call, getEnableMaxHoldPacksValue),
+                new CodeInstruction(OpCodes.And),
+                new CodeInstruction(OpCodes.Brfalse_S, labelOriginalValue2),
+                new CodeInstruction(OpCodes.Call, getMaxHoldPacksValue),
+                new CodeInstruction(OpCodes.Br_S, labelContinue2)
+            };
 
             for (int i = 0; i < codes.Count; i++)
             {
-                var code = codes[i];
-
-                if (code.opcode == OpCodes.Ldc_I4_8 || (code.opcode == OpCodes.Ldc_I4 && (int)code.operand == 8))
+                if (codes[i].opcode == OpCodes.Ldc_I4_8)
                 {
-                    if (i + 1 < codes.Count && codes[i + 1].opcode.Name.StartsWith("stloc"))
+                    if (i + 1 < codes.Count && codes[i + 1].opcode == OpCodes.Stloc_1)
                     {
                         codes[i].labels.Add(labelOriginalValue);
                         codes[i + 1].labels.Add(labelContinue);
                         codes.InsertRange(i, newCode);
 
                         i += newCode.Count + 1;
+                    }
+                    if (i + 1 < codes.Count && codes[i + 1].opcode == OpCodes.Stloc_S)
+                    {
+                        codes[i].labels.Add(labelOriginalValue2);
+                        codes[i + 1].labels.Add(labelContinue2);
+                        codes.InsertRange(i, newCode2);
+
+                        i += newCode2.Count + 1;
                     }
                 }
             }

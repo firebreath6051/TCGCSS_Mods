@@ -6,6 +6,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 namespace FastPackOpening
@@ -15,11 +16,8 @@ namespace FastPackOpening
     {
         private static readonly Harmony Harmony = new(PluginInfo.PLUGIN_GUID);
         private static ManualLogSource Log { get; set; }
-
-        internal static InteractionPlayerController InteractionPlayerController = new InteractionPlayerController();
         public static bool IsPackPositionsLoaded { get; set; }
         public static bool IsPackPositionsReordered { get; set; }
-        internal static bool IsFirstRun { get; set; }
         public static ConfigEntry<bool> EnableMod { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
@@ -75,12 +73,12 @@ namespace FastPackOpening
             MaxHoldPacks = Config.Bind("2. Held Pack Options",
                                          "Held pack limit",
                                          8,
-                                         new ConfigDescription("How many packs you can hold in your hand.", new AcceptableValueRange<int>(1, 64), new ConfigurationManagerAttributes { Order = 5 }));
+                                         new ConfigDescription("How many packs you can hold in your hand.", new AcceptableValueRange<int>(1, 1024), new ConfigurationManagerAttributes { Order = 5 }));
 
             EnableHeldItemPositions = Config.Bind("2. Held Pack Options",
                                     "Enable pack repositioning",
                                     false,
-                                    new ConfigDescription("Makes held packs stack in rows of 8 in your hands, instead of a single row of up to 64.", null, new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Makes held packs stack in rows of 8 in your hands, instead of a single row of up to 64.\nCan only be changed while in-game.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
             TextPositionX = Config.Bind("2. Held Pack Options",
                                          "Text position X",
@@ -101,20 +99,20 @@ namespace FastPackOpening
             {
                 if (EnableMaxHoldPacksValue && CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks", true))
                 {
-                    EnableMaxHoldPacks.Value = false;
-                    //Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);
+                    /*EnableMaxHoldPacks.Value = false;
+                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
+                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);*/
                 }
                 if (EnableMaxHoldPacksValue && !CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
                 {
                     /*Harmony.Patch(
                         AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)),
                         prefix: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_OnGameDataFinishLoaded_Prefix))
-                    );*/
+                    );
                     Harmony.Patch(
                         AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)),
                         transpiler: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler))
-                    );
+                    );*/
                 }
             };
 
@@ -148,16 +146,24 @@ namespace FastPackOpening
 
             EnableHeldItemPositions.SettingChanged += (_, _) =>
             {
-                if (EnableModValue && EnableMaxHoldPacksValue)
+                if (!CSingleton<CGameManager>.Instance.m_IsGameLevel && EnableHeldItemPositionsValue)
+                {
+                    EnableHeldItemPositions.Value = true;
+                }
+                else if (!CSingleton<CGameManager>.Instance.m_IsGameLevel && !EnableHeldItemPositionsValue)
+                {
+                    EnableHeldItemPositions.Value = false;
+                }
+                else if (EnableModValue && EnableMaxHoldPacksValue && CSingleton<CGameManager>.Instance.m_IsGameLevel)
                 {
                     if (EnableHeldItemPositionsValue)
                     {
                         MovePackPositions();
                     }
                 }
-                if (!EnableHeldItemPositionsValue)
+                if (!EnableHeldItemPositionsValue && CSingleton<CGameManager>.Instance.m_IsGameLevel)
                 {
-                    MovePackPositions();
+                    ReorderPackPositions();
                 }
             };
 
@@ -167,7 +173,6 @@ namespace FastPackOpening
         {
             Harmony.PatchAll();
             L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
-            IsFirstRun = true;
         }
 
         private void OnDisable()
@@ -182,184 +187,129 @@ namespace FastPackOpening
             {
                 if (CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
                 {
-                    EnableMaxHoldPacks.Value = false;
+                    /*EnableMaxHoldPacks.Value = false;
                     Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);
+                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);*/
                 }
             }
         }
-        public struct TransformData
-        {
-            public Vector3 position;
-            public Quaternion rotation;
-            public Vector3 scale;
 
-            public TransformData(Vector3 position, Quaternion rotation, Vector3 scale)
+        internal static List<Transform> MovePackPositions()
+        {
+            if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null)
             {
-                this.position = position;
-                this.rotation = rotation;
-                this.scale = scale;
+                L("InteractionPlayerController.instance is null");
+                return null;
             }
-        }
-
-        internal static List<TransformData> OriginalPosList = new List<TransformData>();
-
-        internal static void MovePackPositions()
-        {
-            List<Transform> transformsList = InteractionPlayerController.instance.m_HoldCardPackPosList;
-            Transform baseTransform = transformsList[0].parent;
-            Vector3 basePosition = new Vector3(transformsList[0].position.x, transformsList[0].position.y, transformsList[0].position.z);
-            Vector3 basePosition2 = new Vector3(transformsList[1].position.x, transformsList[1].position.y, transformsList[1].position.z);
+            List<Transform> transformsList = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList;
+            Transform parentTransform = Instantiate(GameObject.Find("HoldPackPosition"), GameObject.Find("FOVAdjustedPositionLoc_Grp").transform, false).transform;
+            parentTransform.name = "HoldPackParentTransform";
+            Transform baseTransform = Instantiate(GameObject.Find("HoldPackPositionLoc"), GameObject.Find("HoldPackPosition").transform, false).transform;
+            baseTransform.name = "HoldPackBaseTransform";
+            Transform baseTransform2 = Instantiate(GameObject.Find("HoldPackPositionLoc (1)"), GameObject.Find("HoldPackPosition").transform, false).transform;
+            baseTransform2.name = "HoldPackBaseTransform (1)";
+            Vector3 basePosition = baseTransform.localPosition;
+            Vector3 basePosition2 = baseTransform2.localPosition;
             Quaternion baseRotation = baseTransform.rotation;
 
             int existingCount = transformsList.Count;
-            int totalNeeded = 64;
+            int totalNeeded = 1024;
             int amountPerRow = 8;
             float scaleFactor = 0.85f;
+            float rowSpacing = 0.055f;
 
-            float xDelta = basePosition2.x - basePosition.x;
+            float xDelta = EnableHeldItemPositionsValue ? rowSpacing : (basePosition2.x - basePosition.x);
             float yDelta = basePosition2.y - basePosition.y;
-            float zDelta = 0.03f;
+            float zDelta = basePosition2.z - basePosition.z;
 
             if (transformsList.Count < totalNeeded)
             {
-                for (int i = existingCount; i < totalNeeded; i++)
+                for (int i = 0; i < totalNeeded; i++)
                 {
-                    GameObject newGameObject = new GameObject("HoldPackPositionLoc (" + (i) + ")");
-                    Transform newTransform = newGameObject.transform;
-                    newTransform.parent = baseTransform;
-                    newTransform.rotation = EnableHeldItemPositionsValue ? baseRotation : new Quaternion(0, 0, 0, 1);
-                    newTransform.localScale = transformsList[0].localScale;
-                    newTransform.position = basePosition + new Vector3(xDelta, yDelta, zDelta) * i;
-                    transformsList.Add(newTransform);
-                }
-            }
-
-            // Store original positions, rotations, and scales if not already done
-            if (OriginalPosList == null || OriginalPosList.Count == 0)
-            {
-                OriginalPosList = new List<TransformData>();
-                // Ensure that the number of elements in the transformsList is the same as existingCount
-                for (int i = 0; i < existingCount; i++)
-                {
-                    if (i < transformsList.Count)
+                    GameObject oldObject = null;
+                    if (i < existingCount)
                     {
-                        Transform t = transformsList[i];
-                        OriginalPosList.Add(new TransformData(t.position, t.rotation, t.localScale));
+                        oldObject = transformsList[i].gameObject;
                     }
+                    Transform newTransform = Instantiate(baseTransform, parentTransform);
+                    newTransform.name = i == 0 ? "HoldPackPositionLoc" : $"HoldPackPositionLoc ({i})";
+                    newTransform.rotation = baseRotation;
+                    newTransform.localScale = baseTransform.localScale;
+                    newTransform.localPosition = basePosition + new Vector3(xDelta, yDelta, zDelta) * i;
+
+                    if (i < existingCount)
+                    {
+                        transformsList[i] = newTransform;
+                    }
+                    else
+                    {
+                        transformsList.Add(newTransform);
+                    }
+                    Destroy(oldObject);
                 }
             }
-
-            if (EnableHeldItemPositionsValue)
+            
+            if ((EnableHeldItemPositionsValue && !IsPackPositionsReordered))
             {
                 for (int i = 0; i < totalNeeded; i++)
                 {
                     int rowIndex = i / amountPerRow;
                     int indexInRow = i % amountPerRow;
-                    float x = basePosition.x + xDelta * indexInRow;
-                    float y = basePosition.y + yDelta * indexInRow;
-                    float z;
+                    float xOffset = 0.0267f;
+
+                    float x;
                     if (rowIndex % 2 == 0)
                     {
-                        z = basePosition.z - zDelta * (rowIndex / 2) - 0.0155f;
+                        x = basePosition.x - xDelta * (rowIndex / 2) - xOffset;
                     }
                     else
                     {
-                        z = basePosition.z + zDelta * ((rowIndex + 1) / 2) - 0.0155f;
+                        x = basePosition.x + xDelta * ((rowIndex + 1) / 2) - xOffset;
                     }
+                    float y = basePosition.y + yDelta * indexInRow;
+                    float z = basePosition.z + zDelta * indexInRow;
 
-                    transformsList[i].localScale = Vector3.one * scaleFactor;
-                    transformsList[i].position = new Vector3(x, y, z);
+                    transformsList[i].localScale = baseTransform.localScale * scaleFactor;
+                    transformsList[i].localPosition = new Vector3(x, y, z);
                     transformsList[i].rotation = baseRotation;
                 }
                 IsPackPositionsReordered = true;
             }
-            else
+            else if ((!EnableHeldItemPositionsValue && IsPackPositionsReordered))
             {
-                // Ensure we do not access out-of-bounds indexes
-                for (int i = 0; i < existingCount; i++)
+                for (int i = 0; i < totalNeeded; i++)
                 {
-                    if (i < transformsList.Count && i < OriginalPosList.Count)
-                    {
-                        transformsList[i].position = OriginalPosList[i].position;
-                        transformsList[i].rotation = OriginalPosList[i].rotation;
-                        transformsList[i].localScale = OriginalPosList[i].scale;
-                    }
+                    int rowIndex = i / totalNeeded;
+                    int indexInRow = i % totalNeeded;
+                    float x = basePosition.x + xDelta * indexInRow;
+                    float y = basePosition.y + yDelta * indexInRow;
+                    float z = basePosition.z + zDelta * indexInRow;
+
+                    transformsList[i].localScale = baseTransform.localScale;
+                    transformsList[i].localPosition = new Vector3(x, y, z);
+                    transformsList[i].rotation = baseRotation;
                 }
                 IsPackPositionsReordered = false;
             }
-            IsFirstRun = false;
             IsPackPositionsLoaded = true;
+
+            return transformsList;
         }
-
-        /*internal static void MovePackPositionsReorder()
+        internal static void ReorderPackPositions() // don't ask, just accept it
         {
-            if (!IsPackPositionsLoaded)
+            if (EnableHeldItemPositions.Value)
             {
-                MovePackPositions();
+                EnableHeldItemPositions.Value = false;
+                EnableHeldItemPositions.Value = true;
             }
-            if (InteractionPlayerController.instance.m_HoldCardPackPosList.Count < 10)
+            else
             {
-                return;
+                EnableHeldItemPositions.Value = true;
+                EnableHeldItemPositions.Value = false;
             }
-            L("MovePackPositionsReorder");
-            if (InteractionPlayerController.instance.m_HoldCardPackPosList.Count < 64)
-            {
-                List<Transform> transformsList = InteractionPlayerController.instance.m_HoldCardPackPosList;
-                Transform baseTransform = transformsList.First();
-                Vector3 basePosition = baseTransform.position;
-                Vector3 lastDelta = transformsList[transformsList.Count - 1].position - transformsList[transformsList.Count - 2].position;
 
-                for (int i = 0; i < 54; i++)
-                {
-                    Vector3 newPosition = transformsList[transformsList.Count - 1].position + lastDelta;
-                    newPosition = basePosition + (newPosition - basePosition);
-                    GameObject newGameObject = new GameObject("HoldPackPositionLoc (" + (transformsList.Count) + ")");
-                    Transform newTransform = newGameObject.transform;
-                    newTransform.parent = baseTransform;
-                    newTransform.rotation = baseTransform.rotation;
-                    newTransform.localScale = baseTransform.localScale;
-                    newTransform.position = newPosition;
-                    transformsList.Add(newTransform);
-                }
-            }
+            return;
         }
-        internal static void ResetPacksPos()
-        {
-            if ((!IsPackPositionsReordered && IsPackPositionsLoaded) || OriginalPosList.Count == 0)
-            {
-                return;
-            }
-            L("ResetPackPos");
-            try
-            {
-                if (InteractionPlayerController.instance.m_HoldCardPackPosList.Count < 64)
-                {
-                    List<Transform> transformsList = InteractionPlayerController.instance.m_HoldCardPackPosList;
-                    Transform baseTransform = transformsList.First();
-                    Vector3 basePosition = baseTransform.position;
-                    Vector3 lastDelta = OriginalPosList[transformsList.Count - 1].position - OriginalPosList[transformsList.Count - 2].position;
-
-                    for (int i = 0; i < transformsList.Count; i++)
-                    {
-                        Vector3 newPosition = OriginalPosList[OriginalPosList.Count - 1].position + lastDelta;
-                        newPosition = basePosition + (newPosition - basePosition);
-                        GameObject newGameObject = new GameObject("HoldPackPositionLoc (" + (transformsList.Count) + ")");
-                        Transform newTransform = newGameObject.transform;
-                        newTransform.parent = baseTransform;
-                        newTransform.rotation = baseTransform.rotation;
-                        newTransform.localScale = baseTransform.localScale;
-                        newTransform.position = newPosition;
-                        transformsList[i] = newTransform;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                L(e.Message);
-            }
-            IsPackPositionsReordered = false;
-        }*/
 
         public static bool EnableHeldItemPositionsValue
         {
@@ -399,7 +349,7 @@ namespace FastPackOpening
             {
                 if (IncompatiblePlugins.Count > 0 && IncompatiblePlugins.ContainsKey(plugin))
                 {
-                    if (printInfo) L($"Forcing {setting} to disabled due to incompatible plugin: {plugin}");
+                    if (printInfo) L($"Incompatible plugin found: {plugin}, both mods may not work as intended, consider removing one.");
                     return true;
                 }
             }
