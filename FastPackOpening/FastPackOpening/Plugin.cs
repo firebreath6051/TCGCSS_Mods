@@ -37,17 +37,17 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
                                    new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 5 }));
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
-            StopAutoHighValue = Config.Bind("1. Config Options",
-                                    "Stop auto open at high value cards",
-                                    true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 4 }));
+            StopAutoNewCard = Config.Bind("1. Config Options",
+                                    "Stop auto open at new cards",
+                                    false,
+                                    new ConfigDescription("Stops automatically opening packs when you get a new card you haven't gotten before.", null, new ConfigurationManagerAttributes { Order = 5 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
@@ -114,6 +114,18 @@ namespace FastPackOpening
                         transpiler: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler))
                     );*/
                 }
+                if (EnableHeldItemPositionsValue && !EnableMaxHoldPacksValue)
+                {
+                    MovePackPositions();
+                }
+            };
+
+            EnableMod.SettingChanged += (_, _) =>
+            {
+                if (EnableHeldItemPositionsValue && !EnableModValue)
+                {
+                    MovePackPositions();
+                }
             };
 
             SpeedMultiplier.SettingChanged += (_, _) =>
@@ -146,24 +158,9 @@ namespace FastPackOpening
 
             EnableHeldItemPositions.SettingChanged += (_, _) =>
             {
-                if (!CSingleton<CGameManager>.Instance.m_IsGameLevel && EnableHeldItemPositionsValue)
+                if (EnableModValue && EnableMaxHoldPacksValue)
                 {
-                    EnableHeldItemPositions.Value = true;
-                }
-                else if (!CSingleton<CGameManager>.Instance.m_IsGameLevel && !EnableHeldItemPositionsValue)
-                {
-                    EnableHeldItemPositions.Value = false;
-                }
-                else if (EnableModValue && EnableMaxHoldPacksValue && CSingleton<CGameManager>.Instance.m_IsGameLevel)
-                {
-                    if (EnableHeldItemPositionsValue)
-                    {
-                        MovePackPositions();
-                    }
-                }
-                if (!EnableHeldItemPositionsValue && CSingleton<CGameManager>.Instance.m_IsGameLevel)
-                {
-                    ReorderPackPositions();
+                    MovePackPositions();
                 }
             };
 
@@ -196,9 +193,9 @@ namespace FastPackOpening
 
         internal static List<Transform> MovePackPositions()
         {
-            if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null)
+            if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null || CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList.Count == 0)
             {
-                L("InteractionPlayerController.instance is null");
+                L("InteractionPlayerController.instance is null or empty");
                 return null;
             }
             List<Transform> transformsList = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList;
@@ -297,6 +294,11 @@ namespace FastPackOpening
         }
         internal static void ReorderPackPositions() // don't ask, just accept it
         {
+            if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null || CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList.Count == 0)
+            {
+                L("InteractionPlayerController.instance is null or empty");
+                return;
+            }
             if (EnableHeldItemPositions.Value)
             {
                 EnableHeldItemPositions.Value = false;

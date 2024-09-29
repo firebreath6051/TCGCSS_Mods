@@ -4,8 +4,6 @@ using System.Linq;
 using UnityEngine;
 using System.Reflection.Emit;
 using TMPro;
-using System;
-using System.Reflection;
 
 namespace FastPackOpening
 {
@@ -14,7 +12,6 @@ namespace FastPackOpening
     {
         public static bool IsAutoOpen { get; set; }
         public static bool DelayAutoOpen { get; set; }
-        public static bool DelayAutoOpen2 { get; set; }
         public static int PacksInHand { get; set; }
         public static float PackSpeedMultiplier { get; set; }
         public static float LogTimer { get; set; }
@@ -28,8 +25,6 @@ namespace FastPackOpening
                 __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = 1f;
                 return true;
             }
-
-            __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = Plugin.SpeedMultiplierValue;
 
             if (__instance.CanOpenPack())
             {
@@ -59,6 +54,7 @@ namespace FastPackOpening
                 SoundManager.PlayAudio("SFX_OpenCardBox", 0.6f, 1f);
                 __instance.m_OpenCardBoxInnerMesh.gameObject.SetActive(true);
                 __instance.m_OpenCardBoxInnerMesh.Rewind();
+                __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = Plugin.SpeedMultiplierValue;
                 __instance.m_OpenCardBoxInnerMesh.Play();
                 for (int i = 0; i < 8; i++)
                 {
@@ -125,13 +121,6 @@ namespace FastPackOpening
             return;
         }
 
-        /*[HarmonyPrefix]
-        [HarmonyPatch(typeof(CGameManager), nameof(CGameManager.SaveGame))]
-        public static bool CGameManager_SaveGame_Prefix(ref CGameManager __instance)
-        {
-            return true;
-        }*/
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
@@ -158,6 +147,7 @@ namespace FastPackOpening
                 {
                     __instance.m_HoldItemList.Add(list2[n]);
                 }
+                Plugin.L($"__instance.m_HoldItemList.Count: {__instance.m_HoldItemList.Count}");
                 __instance.SetCurrentGameState(EGameState.HoldingItemState);
                 __instance.m_IsHoldItemMode = true;
                 if (Plugin.EnableHeldItemPositions.Value)
@@ -226,7 +216,6 @@ namespace FastPackOpening
                     item.gameObject.SetActive(true);
                     list2.Add(item);
                 }
-                __instance.m_HoldItemList.Clear();
                 for (int n = 0; n < list2.Count; n++)
                 {
                     __instance.m_HoldItemList.Add(list2[n]);
@@ -634,7 +623,7 @@ namespace FastPackOpening
                             __instance.m_CardOpeningSequenceUI.HideSingleCardValue();
                         }
                         __instance.m_IsGetHighValueCard = false;
-                        if (DelayAutoOpen && !IsAutoOpen)
+                        if ((DelayAutoOpen && !IsAutoOpen) || (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex] && DelayAutoOpen && !IsAutoOpen))
                         {
                             IsAutoOpen = true;
                         }
