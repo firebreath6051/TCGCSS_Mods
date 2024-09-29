@@ -22,7 +22,6 @@ namespace FastPackOpening
         {
             if (!Plugin.EnableMod.Value)
             {
-                __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = 1f;
                 return true;
             }
 
@@ -37,6 +36,7 @@ namespace FastPackOpening
             }
             if (__instance.CanOpenCardBox())
             {
+                Plugin.MovePackPositions();
                 __instance.m_IsOpeningCardBox = true;
                 Item item2 = __instance.m_HoldItemList[0];
                 EItemType eitemType = __instance.CardBoxToCardPack(item2.GetItemType());
@@ -54,8 +54,15 @@ namespace FastPackOpening
                 SoundManager.PlayAudio("SFX_OpenCardBox", 0.6f, 1f);
                 __instance.m_OpenCardBoxInnerMesh.gameObject.SetActive(true);
                 __instance.m_OpenCardBoxInnerMesh.Rewind();
-                __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = Plugin.SpeedMultiplierValue;
                 __instance.m_OpenCardBoxInnerMesh.Play();
+                if (Plugin.EnableMod.Value)
+                {
+                    __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = Plugin.SpeedMultiplierValue;
+                }
+                else
+                {
+                    __instance.m_OpenCardBoxInnerMesh["OpenCardBoxAnim"].speed = 1f;
+                }
                 for (int i = 0; i < 8; i++)
                 {
                     ItemMeshData itemMeshData2 = InventoryBase.GetItemMeshData(eitemType);
@@ -63,12 +70,12 @@ namespace FastPackOpening
                     item3.SetMesh(itemMeshData2.mesh, itemMeshData2.material, eitemType, itemMeshData2.meshSecondary, itemMeshData2.materialSecondary);
                     item3.transform.position = __instance.m_OpenCardBoxSpawnCardPackPosList[i].position;
                     item3.transform.rotation = __instance.m_OpenCardBoxSpawnCardPackPosList[i].rotation;
-                    item3.transform.SetParent(__instance.m_OpenCardBoxSpawnCardPackPosList[i]);
+                    item3.transform.parent = __instance.m_OpenCardBoxSpawnCardPackPosList[i];
                     item3.transform.localScale = __instance.m_OpenCardBoxSpawnCardPackPosList[i].localScale;
                     item3.gameObject.SetActive(true);
                     __instance.m_HoldItemList.Add(item3);
                     CPlayerData.m_HoldItemTypeList.Add(item3.GetItemType());
-                    __instance.StartCoroutine(__instance.DelayLerpSpawnedCardPackToHand(i, (1.25f / Plugin.SpeedMultiplierValue) + 0.05f * ((float)i / Plugin.SpeedMultiplierValue), item3, __instance.m_HoldCardPackPosList[i], item2));
+                    __instance.StartCoroutine(__instance.DelayLerpSpawnedCardPackToHand(i, (1.25f + 0.05f * (float)i) / Plugin.SpeedMultiplierValue, item3, __instance.m_HoldCardPackPosList[i], item2));
                 }
             }
 
@@ -125,43 +132,8 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
         {
-            Plugin.L($"IsPackPositionsLoaded: {Plugin.IsPackPositionsLoaded}");
             __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
 
-            if (CPlayerData.m_HoldItemTypeList.Count > 0 && CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
-            {
-                List<Item> list2 = new List<Item>();
-                for (int m = 0; m < CPlayerData.m_HoldItemTypeList.Count; m++)
-                {
-                    ItemMeshData itemMeshData = InventoryBase.GetItemMeshData(CPlayerData.m_HoldItemTypeList[m]);
-                    Item item = ItemSpawnManager.GetItem(__instance.m_HoldCardPackPosList[m]);
-                    item.SetMesh(itemMeshData.mesh, itemMeshData.material, CPlayerData.m_HoldItemTypeList[m], itemMeshData.meshSecondary, itemMeshData.materialSecondary);
-                    item.transform.position = __instance.m_HoldCardPackPosList[m].position;
-                    item.transform.rotation = __instance.m_HoldCardPackPosList[m].rotation;
-                    item.SmoothLerpToTransform(__instance.m_HoldCardPackPosList[m], __instance.m_HoldCardPackPosList[m], false);
-                    item.gameObject.SetActive(true);
-                    list2.Add(item);
-                }
-                __instance.m_HoldItemList.Clear();
-                for (int n = 0; n < list2.Count; n++)
-                {
-                    __instance.m_HoldItemList.Add(list2[n]);
-                }
-                Plugin.L($"__instance.m_HoldItemList.Count: {__instance.m_HoldItemList.Count}");
-                __instance.SetCurrentGameState(EGameState.HoldingItemState);
-                __instance.m_IsHoldItemMode = true;
-                if (Plugin.EnableHeldItemPositions.Value)
-                {
-                    Plugin.EnableHeldItemPositions.Value = false;
-                    Plugin.EnableHeldItemPositions.Value = true;
-                }
-                else
-                {
-                    Plugin.EnableHeldItemPositions.Value = true;
-                    Plugin.EnableHeldItemPositions.Value = false;
-                }
-                return false;
-            }
             return false;
         }
 
@@ -171,6 +143,13 @@ namespace FastPackOpening
         {
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.SetRotationAngles(0f, -35f);
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.enabled = false;
+            if (CPlayerData.m_HoldItemTypeList.Count > 7 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
+            {
+                for (int i = CPlayerData.m_HoldItemTypeList.Count - 1; i >= 8; i--)
+                {
+                    CPlayerData.m_HoldItemTypeList.RemoveAt(i);
+                }
+            }
             if (CPlayerData.m_HoldCardDataList.Count > 7)
             {
                 for (int j = CPlayerData.m_HoldCardDataList.Count - 1; j >= 8; j--)
@@ -202,7 +181,7 @@ namespace FastPackOpening
                 __instance.EnterHoldCardMode();
                 return;
             }
-            if (CPlayerData.m_HoldItemTypeList.Count > 0 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
+            if (CPlayerData.m_HoldItemTypeList.Count > 0)
             {
                 List<Item> list2 = new List<Item>();
                 for (int m = 0; m < CPlayerData.m_HoldItemTypeList.Count; m++)
@@ -222,6 +201,7 @@ namespace FastPackOpening
                 }
                 __instance.SetCurrentGameState(EGameState.HoldingItemState);
                 __instance.m_IsHoldItemMode = true;
+                Plugin.ReorderPackPositions();
                 return;
             }
             return;
@@ -285,6 +265,19 @@ namespace FastPackOpening
             }
             return codes.AsEnumerable();
         }
+
+        /*[HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf))]
+        public static void InteractionPlayerController_EvaluateTakeItemFromShelf_Postfix(ref InteractionPlayerController __instance)
+        {
+            if (__instance.m_HoldItemList[0].m_ItemType.ToString().Contains("CardPack"))
+            {
+                Plugin.IsPackPositionsReordered = true;
+                __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
+            }
+
+            return;
+        }*/
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CardOpeningSequenceUI), nameof(CardOpeningSequenceUI.Update))]

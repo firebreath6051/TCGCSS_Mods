@@ -76,9 +76,9 @@ namespace FastPackOpening
                                          new ConfigDescription("How many packs you can hold in your hand.", new AcceptableValueRange<int>(1, 1024), new ConfigurationManagerAttributes { Order = 5 }));
 
             EnableHeldItemPositions = Config.Bind("2. Held Pack Options",
-                                    "Enable pack repositioning",
+                                    "Enable hold item repositioning",
                                     false,
-                                    new ConfigDescription("Makes held packs stack in rows of 8 in your hands, instead of a single row of up to 64.\nCan only be changed while in-game.", null, new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Makes held packs stack in several rows in your hands, instead of a single line.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
             TextPositionX = Config.Bind("2. Held Pack Options",
                                          "Text position X",
@@ -114,17 +114,17 @@ namespace FastPackOpening
                         transpiler: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler))
                     );*/
                 }
-                if (EnableHeldItemPositionsValue && !EnableMaxHoldPacksValue)
+                if (!EnableMaxHoldPacks.Value && EnableHeldItemPositions.Value)
                 {
-                    MovePackPositions();
+                    EnableHeldItemPositions.Value = false;
                 }
             };
 
             EnableMod.SettingChanged += (_, _) =>
             {
-                if (EnableHeldItemPositionsValue && !EnableModValue)
+                if (!EnableMod.Value && EnableHeldItemPositions.Value)
                 {
-                    MovePackPositions();
+                    EnableHeldItemPositions.Value = false;
                 }
             };
 
@@ -158,9 +158,27 @@ namespace FastPackOpening
 
             EnableHeldItemPositions.SettingChanged += (_, _) =>
             {
-                if (EnableModValue && EnableMaxHoldPacksValue)
+                if (!CSingleton<CGameManager>.Instance.m_IsGameLevel)
                 {
-                    MovePackPositions();
+                    if (EnableHeldItemPositions.Value)
+                    {
+                        EnableHeldItemPositions.Value = true;
+                    }
+                    else
+                    {
+                        EnableHeldItemPositions.Value = false;
+                    }
+                }
+                else
+                {
+                    if (EnableHeldItemPositions.Value && !IsPackPositionsReordered)
+                    {
+                        MovePackPositions();
+                    }
+                    else if (!EnableHeldItemPositions.Value && IsPackPositionsReordered)
+                    {
+                        MovePackPositions();
+                    }
                 }
             };
 
@@ -198,6 +216,10 @@ namespace FastPackOpening
                 L("InteractionPlayerController.instance is null or empty");
                 return null;
             }
+            if (!CSingleton<CGameManager>.Instance.m_IsGameLevel)
+            {
+                return null;
+            }
             List<Transform> transformsList = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList;
             Transform parentTransform = Instantiate(GameObject.Find("HoldPackPosition"), GameObject.Find("FOVAdjustedPositionLoc_Grp").transform, false).transform;
             parentTransform.name = "HoldPackParentTransform";
@@ -212,6 +234,7 @@ namespace FastPackOpening
             int existingCount = transformsList.Count;
             int totalNeeded = 1024;
             int amountPerRow = 8;
+            int numOfRows = 8;
             float scaleFactor = 0.85f;
             float rowSpacing = 0.055f;
 
@@ -223,17 +246,11 @@ namespace FastPackOpening
             {
                 for (int i = 0; i < totalNeeded; i++)
                 {
-                    GameObject oldObject = null;
-                    if (i < existingCount)
-                    {
-                        oldObject = transformsList[i].gameObject;
-                    }
                     Transform newTransform = Instantiate(baseTransform, parentTransform);
                     newTransform.name = i == 0 ? "HoldPackPositionLoc" : $"HoldPackPositionLoc ({i})";
                     newTransform.rotation = baseRotation;
                     newTransform.localScale = baseTransform.localScale;
                     newTransform.localPosition = basePosition + new Vector3(xDelta, yDelta, zDelta) * i;
-
                     if (i < existingCount)
                     {
                         transformsList[i] = newTransform;
@@ -242,17 +259,18 @@ namespace FastPackOpening
                     {
                         transformsList.Add(newTransform);
                     }
-                    Destroy(oldObject);
                 }
             }
-            
+
             if ((EnableHeldItemPositionsValue && !IsPackPositionsReordered))
             {
                 for (int i = 0; i < totalNeeded; i++)
                 {
-                    int rowIndex = i / amountPerRow;
+                    int rowIndex = (i / amountPerRow) % numOfRows;
                     int indexInRow = i % amountPerRow;
                     float xOffset = 0.0267f;
+                    int completedRowSets = (i / amountPerRow) / numOfRows;
+                    float additionalZOffset = amountPerRow * zDelta;
 
                     float x;
                     if (rowIndex % 2 == 0)
@@ -263,8 +281,8 @@ namespace FastPackOpening
                     {
                         x = basePosition.x + xDelta * ((rowIndex + 1) / 2) - xOffset;
                     }
-                    float y = basePosition.y + yDelta * indexInRow;
-                    float z = basePosition.z + zDelta * indexInRow;
+                    float y = (basePosition.y + yDelta * indexInRow) - 0.1f;
+                    float z = basePosition.z + zDelta * indexInRow + completedRowSets * additionalZOffset;
 
                     transformsList[i].localScale = baseTransform.localScale * scaleFactor;
                     transformsList[i].localPosition = new Vector3(x, y, z);
@@ -272,7 +290,7 @@ namespace FastPackOpening
                 }
                 IsPackPositionsReordered = true;
             }
-            else if ((!EnableHeldItemPositionsValue && IsPackPositionsReordered))
+            else if ((!EnableHeldItemPositionsValue && IsPackPositionsReordered) || !EnableMaxHoldPacksValue || !EnableModValue)
             {
                 for (int i = 0; i < totalNeeded; i++)
                 {
