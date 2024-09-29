@@ -37,17 +37,17 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
                                    new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 5 }));
 
-            StopAutoNewCard = Config.Bind("1. Config Options",
-                                    "Stop auto open at new cards",
-                                    false,
-                                    new ConfigDescription("Stops automatically opening packs when you get a new card you haven't gotten before.", null, new ConfigurationManagerAttributes { Order = 5 }));
+            StopAutoHighValue = Config.Bind("1. Config Options",
+                                    "Stop auto open at high value cards",
+                                    true,
+                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
