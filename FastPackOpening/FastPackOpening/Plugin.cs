@@ -59,7 +59,7 @@ namespace FastPackOpening
             PackResultsTimer = Config.Bind("1. Config Options",
                                     "Pack results screen timer",
                                     1f,
-                                    new ConfigDescription("Amount of time the pack results screen is displayed before auto open proceeds.", new AcceptableValueRange<float>(0, 10), new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Amount of time (in seconds) the pack results screen is displayed before auto open proceeds.", new AcceptableValueRange<float>(0, 10), new ConfigurationManagerAttributes { Order = 4 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
