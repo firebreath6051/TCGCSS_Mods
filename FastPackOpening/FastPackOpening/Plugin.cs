@@ -96,17 +96,17 @@ namespace FastPackOpening
 
             TextPositionX = Config.Bind("2. Held Pack Options",
                                          "Text position X",
-                                         100f,
+                                         120f,
                                          new ConfigDescription("X coordinate for the held item counter.\nZero is bottom of the screen", new AcceptableValueRange<float>(0, Screen.currentResolution.width), new ConfigurationManagerAttributes { Order = 3 }));
 
             TextPositionY = Config.Bind("2. Held Pack Options",
                                          "Text position Y",
-                                         20f,
+                                         980f,
                                          new ConfigDescription("Y coordinate for the held item counter.\nZero is left side of the screen.", new AcceptableValueRange<float>(0, Screen.currentResolution.height), new ConfigurationManagerAttributes { Order = 2 }));
 
             TextSize = Config.Bind("2. Held Pack Options",
                                          "Text size",
-                                         20,
+                                         26,
                                          new ConfigDescription("Text size for held item counter.", new AcceptableValueRange<int>(1, 32), new ConfigurationManagerAttributes { Order = 1 }));
 
             EnableMaxHoldPacks.SettingChanged += (_, _) =>
