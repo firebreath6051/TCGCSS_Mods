@@ -737,7 +737,7 @@ namespace FastPackOpening
                 else if (__instance.m_StateIndex == 9)
                 {
                     __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
-                    if (__instance.m_Slider >= Plugin.PackResultsTimerValue * Plugin.SpeedMultiplierValue)
+                    if (__instance.m_Slider >= (Plugin.SkipPackEndScreenValue ? Plugin.PackResultsTimerValue * Plugin.SpeedMultiplierValue : Plugin.PackResultsTimerValue))
                     {
                         __instance.m_Slider = 0f;
                         __instance.m_StateIndex++;
