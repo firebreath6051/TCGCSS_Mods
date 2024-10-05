@@ -5,8 +5,6 @@ using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 
 namespace FastPackOpening
@@ -19,6 +17,7 @@ namespace FastPackOpening
         public static bool IsPackPositionsLoaded { get; set; }
         public static bool IsPackPositionsReordered { get; set; }
         public static ConfigEntry<bool> EnableMod { get; private set; }
+        public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
         internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
@@ -34,20 +33,27 @@ namespace FastPackOpening
         {
             Log = Logger;
 
+            // Config Options
+
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
                                    new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 5 }));
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             StopAutoHighValue = Config.Bind("1. Config Options",
                                     "Stop auto open at high value cards",
                                     true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 5 }));
+
+            SkipPackEndScreen = Config.Bind("1. Config Options",
+                                    "Speed up pack results screen",
+                                    false,
+                                    new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
@@ -58,12 +64,14 @@ namespace FastPackOpening
             SpeedMultiplier = Config.Bind("1. Config Options",
                                          "Speed multiplier",
                                          1f,
-                                         new ConfigDescription("Speed multiplier", new AcceptableValueRange<float>(1, 10), new ConfigurationManagerAttributes { Order = 2 }));
+                                         new ConfigDescription("Speed multiplier", new AcceptableValueRange<float>(1, 100), new ConfigurationManagerAttributes { Order = 2 }));
 
             PickupSpeedMultiplier = Config.Bind("1. Config Options",
                                          "Pickup speed multiplier",
                                          1f,
-                                         new ConfigDescription("Speed multiplier for card pack pick up and put down.", new AcceptableValueRange<float>(1, 10), new ConfigurationManagerAttributes { Order = 1 }));
+                                         new ConfigDescription("Speed multiplier for card pack pick up and put down.", new AcceptableValueRange<float>(1, 100), new ConfigurationManagerAttributes { Order = 1 }));
+
+            // Held Pack Options
 
             EnableMaxHoldPacks = Config.Bind("2. Held Pack Options",
                                     "Enable max hold limit",
@@ -198,28 +206,28 @@ namespace FastPackOpening
 
         private void Update()
         {
-            if (EnableMaxHoldPacksValue)
+            /*if (EnableMaxHoldPacksValue)
             {
                 if (CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
                 {
-                    /*EnableMaxHoldPacks.Value = false;
+                    EnableMaxHoldPacks.Value = false;
                     Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);*/
+                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);
                 }
-            }
+            }*/
         }
 
         internal static List<Transform> MovePackPositions()
         {
             if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null || CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList.Count == 0)
             {
-                L("InteractionPlayerController.instance is null or empty");
                 return null;
             }
             if (!CSingleton<CGameManager>.Instance.m_IsGameLevel)
             {
                 return null;
             }
+
             List<Transform> transformsList = CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList;
             Transform parentTransform = Instantiate(GameObject.Find("HoldPackPosition"), GameObject.Find("FOVAdjustedPositionLoc_Grp").transform, false).transform;
             parentTransform.name = "HoldPackParentTransform";
@@ -307,14 +315,13 @@ namespace FastPackOpening
                 IsPackPositionsReordered = false;
             }
             IsPackPositionsLoaded = true;
-
+            
             return transformsList;
         }
         internal static void ReorderPackPositions() // don't ask, just accept it
         {
             if (CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList == null || CSingleton<InteractionPlayerController>.Instance.m_HoldCardPackPosList.Count == 0)
             {
-                L("InteractionPlayerController.instance is null or empty");
                 return;
             }
             if (EnableHeldItemPositions.Value)
@@ -350,6 +357,10 @@ namespace FastPackOpening
         public static bool EnableModValue
         {
             get { return EnableMod.Value; }
+        }
+        public static bool SkipPackEndScreenValue
+        {
+            get { return SkipPackEndScreen.Value; }
         }
         public static bool EnableMaxHoldPacksValue
         {

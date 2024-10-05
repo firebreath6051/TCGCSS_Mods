@@ -4,7 +4,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>DisplayCustomerMoney</AssemblyName>
     <Description>Display Customer Money</Description>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <BaseOutputPath>C:\Users\diogo\source\repos\TCGCSS_Mods\bin</BaseOutputPath>
@@ -57,6 +57,12 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.UIModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   
@@ -119,4 +125,12 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="xcopy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;D:\Games\Steam\steamapps\common\TCG Card Shop Simulator\BepInEx\plugins\DisplayCustomerMoney&quot; /Y" />
+	</Target>
+
+	<Target Name="RunExeAfterBuild" AfterTargets="Build">
+		<Exec Command="&quot;D:\Games\Steam\Steam.exe&quot; -applaunch 3070070" />
+	</Target>
 </Project>
