@@ -10,32 +10,6 @@ namespace CardChanceCheat
     public class Patches
     {
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(AchievementManager), nameof(AchievementManager.UnlockAchievement))]
-        private static bool AchievementManager_UnlockAchievement_Prefix(ref AchievementManager __instance, string achievementID)
-        {
-            if (!Plugin.EnableMod.Value) return true;
-
-            return false;
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
-        private static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
-        {
-            Plugin.DataCollectPermanent = CPlayerData.m_GameReportDataCollectPermanent;
-            if (Plugin.DataCollectPermanent.storeLevelGained <= 1 && Plugin.DataCollectPermanent.customerVisited <= 1)
-            {
-                Plugin.DataWasSaved = false;
-            }
-            else
-            {
-                Plugin.DataWasSaved = true;
-            }
-
-            return;
-        }
-
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen))]
         private static bool CardOpeningSequence_OpenScreen_Prefix(ref CardOpeningSequence __instance, ECollectionPackType collectionPackType, bool isMultiPack, bool isPremiumPack = false)
         {

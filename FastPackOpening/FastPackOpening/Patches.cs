@@ -12,6 +12,7 @@ namespace FastPackOpening
     {
         public static bool IsAutoOpen { get; set; }
         public static bool DelayAutoOpen { get; set; }
+        public static bool IsFirstLoad = true;
         public static int PacksInHand { get; set; }
         public static float PackSpeedMultiplier { get; set; }
         public static float LogTimer { get; set; }
@@ -132,7 +133,15 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
         {
-            __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
+            if (IsFirstLoad)
+            {
+                __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
+                IsFirstLoad = false;
+            }
+            else
+            {
+                Plugin.ReorderPackPositions();
+            }
 
             return false;
         }
@@ -272,8 +281,6 @@ namespace FastPackOpening
         {
             if (__instance.m_HoldItemList[0].m_ItemType.ToString().Contains("CardPack"))
             {
-                Plugin.IsPackPositionsReordered = true;
-                __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
             }
 
             return;
@@ -694,7 +701,7 @@ namespace FastPackOpening
                         SoundManager.PlayAudio("SFX_PercStarJingle3", 0.6f, 1f);
                         SoundManager.PlayAudio("SFX_Gift", 0.6f, 1f);
                     }
-                    __instance.m_Slider += Time.deltaTime;
+                    __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
                     if (__instance.m_Slider >= 0.05f)
                     {
                         __instance.m_Slider = 0f;
@@ -729,8 +736,8 @@ namespace FastPackOpening
                 }
                 else if (__instance.m_StateIndex == 9)
                 {
-                    __instance.m_Slider += Time.deltaTime;
-                    if (__instance.m_Slider >= 1f / (Plugin.SpeedMultiplierValue / 2))
+                    __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
+                    if (__instance.m_Slider >= 1f)
                     {
                         __instance.m_Slider = 0f;
                         __instance.m_StateIndex++;

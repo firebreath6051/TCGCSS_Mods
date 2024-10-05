@@ -14,7 +14,7 @@ namespace CardChanceCheat
         private static ManualLogSource Log { get; set; }
 
         internal static bool DataWasSaved = false;
-        internal static GameReportDataCollect DataCollectPermanent {  get; set; }
+        internal static GameReportDataCollect DataCollectPermanent = default;
         internal static ConfigEntry<bool> EnableMod { get; private set; }
         internal static ConfigEntry<bool> PerPackChances { get; private set; }
         internal static ConfigEntry<bool> FullGhostPack { get; private set; }
@@ -259,45 +259,12 @@ namespace CardChanceCheat
                                          0.1f,
                                          new ConfigDescription("Base chance for a ghost card in the pack.\nThis is doubled for Destiny packs.", new AcceptableValueRange<float>(0, 100), new ConfigurationManagerAttributes { Order = 1 }));
 
-            EnableMod.SettingChanged += (_, _) =>
-            {
-                if (EnableMod.Value)
-                {
-                    Harmony.PatchAll(Assembly.GetExecutingAssembly());
-                    if (!DataWasSaved)
-                    {
-                        Harmony.Unpatch(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent)), HarmonyPatchType.Transpiler);
-                        Harmony.Unpatch(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen)), HarmonyPatchType.Prefix);
-                    }
-                    if (EnableMod.Value)
-                    {
-                        L($"Mod is enabled! Achievements have been disabled.");
-                    }
-                }
-                else
-                {
-                    Harmony.UnpatchSelf();
-                    if (!EnableMod.Value)
-                    {
-                        L($"Mod is disabled! Achievements have been enabled.");
-                    }
-                }
-            };
         }
 
         private void OnEnable()
         {
             Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            if (!DataWasSaved)
-            {
-                Harmony.Unpatch(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent)), HarmonyPatchType.Transpiler);
-                Harmony.Unpatch(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen)), HarmonyPatchType.Prefix);
-            }
             L($"Plugin {PluginInfo.PLUGIN_NAME} is loaded! Made by WiseHorror (Nargacuga on Nexus)");
-            if (EnableMod.Value)
-            {
-                L($"Mod is enabled! Achievements have been disabled.");
-            }
         }
 
         private void OnDisable()
@@ -307,47 +274,7 @@ namespace CardChanceCheat
         }
         private void Update()
         {
-            if (EnableMod.Value)
-            {
-                if (DataWasSaved && !IsPatched(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent))))
-                {
-                    Harmony.Patch(
-                        AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.GetPackContent)),
-                        transpiler: new HarmonyMethod(typeof(Patches), "CardOpeningSequence_GetPackContent_Transpiler")
-                    );
-                }
-                if (DataWasSaved && !IsPatched(AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen))))
-                {
-                    Harmony.Patch(
-                        AccessTools.Method(typeof(CardOpeningSequence), nameof(CardOpeningSequence.OpenScreen)),
-                        transpiler: new HarmonyMethod(typeof(Patches), "CardOpeningSequence_OpenScreen_Prefix")
-                    );
-                }
-                RevertData();
-            }
-        }
 
-        private bool IsPatched(MethodBase method, bool showLog = false)
-        {
-            if (Harmony.GetPatchedMethods().Contains(method))
-            {
-                if (showLog) L($"Method {method.Name} is patched");
-                return true;
-            }
-            if (showLog) L($"Method {method.Name} is not patched");
-            return false;
-        }
-
-        private void RevertData(bool showLog = false)
-        {
-            if (DataWasSaved)
-            {
-                if (!CPlayerData.m_GameReportDataCollectPermanent.Equals(DataCollectPermanent))
-                {
-                    CPlayerData.m_GameReportDataCollectPermanent = DataCollectPermanent;
-                    if (showLog) L("Data reverted");
-                }
-            }
         }
 
         public static bool PerPackChancesValue

@@ -14,6 +14,8 @@ namespace SaveFileRescueMaybe
         private static readonly Harmony Harmony = new(PluginInfo.PLUGIN_GUID);
         private static ManualLogSource Log { get; set; }
         internal static ConfigEntry<bool> EnableMod { get; private set; }
+        internal static ConfigEntry<bool> DeleteCardPackBoxes { get; private set; }
+        internal static ConfigEntry<bool> DeleteEmptyBoxes { get; private set; }
         private void Awake()
         {
             Log = Logger;
@@ -23,6 +25,16 @@ namespace SaveFileRescueMaybe
                                     "Enable mod",
                                     true,
                                     new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 9 }));
+
+            DeleteEmptyBoxes = Config.Bind("Cheat Chances",
+                                    "Delete empty boxes",
+                                    true,
+                                    new ConfigDescription("Deletes all empty boxes upon loading a save file.", null, new ConfigurationManagerAttributes { Order = 8 }));
+
+            DeleteCardPackBoxes = Config.Bind("Cheat Chances",
+                                    "Delete card pack boxes",
+                                    true,
+                                    new ConfigDescription("Deletes all boxes containing card packs upon loading a save file.", null, new ConfigurationManagerAttributes { Order = 7 }));
         }
 
         private void OnEnable()
