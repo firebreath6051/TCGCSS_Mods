@@ -39,22 +39,22 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 8 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
                                    new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 7 }));
 
             StopAutoHighValue = Config.Bind("1. Config Options",
                                     "Stop auto open at high value cards",
                                     true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 5 }));
+                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             SkipPackEndScreen = Config.Bind("1. Config Options",
                                     "Speed up pack results screen",
                                     false,
-                                    new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 5 }));
 
             PackResultsTimer = Config.Bind("1. Config Options",
                                     "Pack results screen timer",
