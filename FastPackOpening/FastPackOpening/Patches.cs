@@ -609,7 +609,7 @@ namespace FastPackOpening
                         {
                             SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num5, 1f + num4);
                         }
-                        if (__instance.m_CurrentOpenedCardIndex >= 10)
+                        if (__instance.m_CurrentOpenedCardIndex >= 7)
                         {
                             __instance.m_StateIndex = 7;
                         }
@@ -737,7 +737,7 @@ namespace FastPackOpening
                 else if (__instance.m_StateIndex == 9)
                 {
                     __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
-                    if (__instance.m_Slider >= 1f)
+                    if (__instance.m_Slider >= Plugin.PackResultsTimerValue * Plugin.SpeedMultiplierValue)
                     {
                         __instance.m_Slider = 0f;
                         __instance.m_StateIndex++;

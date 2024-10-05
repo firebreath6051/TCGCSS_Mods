@@ -18,6 +18,7 @@ namespace FastPackOpening
         public static bool IsPackPositionsReordered { get; set; }
         public static ConfigEntry<bool> EnableMod { get; private set; }
         public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
+        public static ConfigEntry<float> PackResultsTimer { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
         internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
@@ -54,6 +55,11 @@ namespace FastPackOpening
                                     "Speed up pack results screen",
                                     false,
                                     new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 4 }));
+
+            PackResultsTimer = Config.Bind("1. Config Options",
+                                    "Pack results screen timer",
+                                    1f,
+                                    new ConfigDescription("Amount of time the pack results screen is displayed before auto open proceeds.", new AcceptableValueRange<float>(0, 10), new ConfigurationManagerAttributes { Order = 4 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
@@ -349,6 +355,10 @@ namespace FastPackOpening
         public static float PickupSpeedMultiplierValue
         {
             get { return PickupSpeedMultiplier.Value; }
+        }
+        public static float PackResultsTimerValue
+        {
+            get { return PackResultsTimer.Value; }
         }
         public static int MaxHoldPacksValue
         {
