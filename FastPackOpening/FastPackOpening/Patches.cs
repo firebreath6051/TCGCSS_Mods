@@ -322,6 +322,43 @@ namespace FastPackOpening
             return false;
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.ReadyingCardPack))]
+        public static bool CardOpeningSequence_ReadyingCardPack_Prefix(ref CardOpeningSequence __instance, Item item)
+        {
+            if (!Plugin.EnableMod.Value || !Plugin.DisableSoundsValue) return true;
+
+            if (!__instance.m_IsReadyingToOpen)
+            {
+                __instance.m_IsScreenActive = true;
+                CSingleton<InteractionPlayerController>.Instance.EnterLockMoveMode();
+                CSingleton<InteractionPlayerController>.Instance.OnEnterOpenPackState();
+                __instance.m_IsReadyingToOpen = true;
+                __instance.m_IsReadyToOpen = false;
+                __instance.m_LerpPosTimer = 0f;
+                __instance.m_CurrentItem = item;
+                __instance.m_CardPackAnimator.transform.position = __instance.m_StartLerpTransform.position;
+                __instance.m_CardPackAnimator.transform.rotation = __instance.m_StartLerpTransform.rotation;
+                __instance.m_CardPackAnimator.transform.localScale = __instance.m_StartLerpTransform.localScale;
+                __instance.m_CardPackMesh.material = __instance.m_CurrentItem.m_Mesh.sharedMaterial;
+                __instance.m_CardPackAnimator.gameObject.SetActive(value: true);
+                __instance.m_CurrentItem.gameObject.SetActive(value: false);
+                __instance.m_CardOpeningUIGroup.SetActive(value: false);
+                __instance.m_CardPackAnimator.Play("PackOpenAnim", -1, 0f);
+                CSingleton<InteractionPlayerController>.Instance.m_BlackBGWorldUIFade.SetFadeIn(3f);
+                TutorialManager.SetGameUIVisible(isVisible: false);
+                CenterDot.SetVisibility(isVisible: false);
+                GameUIScreen.HideEnterGoNextDayIndicatorVisible();
+                InteractionPlayerController.TempHideToolTip();
+                InteractionPlayerController.AddToolTip(EGameAction.OpenPack, isHold: true);
+                InteractionPlayerController.AddToolTip(EGameAction.CancelOpenPack);
+                InteractionPlayerController.SetAllHoldItemVisibility(isVisible: false);
+                CSingleton<InteractionPlayerController>.Instance.m_CameraFOVController.StartLerpToFOV(40f);
+            }
+
+            return false;
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.ReadyingCardPack))]
         public static void CardOpeningSequence_ReadyingCardPack_Postfix(ref CardOpeningSequence __instance)
@@ -329,6 +366,17 @@ namespace FastPackOpening
             if (!Plugin.EnableMod.Value) return;
 
             __instance.m_MultiplierStateTimer = (1f + 2.5f * CSingleton<CGameManager>.Instance.m_OpenPackSpeedSlider) * Plugin.SpeedMultiplierValue;
+
+            return;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SoundManager), nameof(SoundManager.SetEnableSound_ExpIncrease))]
+        public static void SoundManager_SetEnableSound_ExpIncrease_Postfix()
+        {
+            if (!Plugin.EnableMod.Value || !Plugin.DisableSoundsValue) return;
+
+            CSingleton<SoundManager>.Instance.m_ExpIncrease.volume = 0f;
 
             return;
         }
@@ -495,8 +543,11 @@ namespace FastPackOpening
                         if (__instance.m_Slider >= 0.3f)
                         {
                             __instance.m_OpenPackVFX.Play();
-                            SoundManager.PlayAudio("SFX_OpenPack", 0.6f, 1f);
-                            SoundManager.PlayAudio("SFX_BoxOpen", 0.5f, 1f);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_OpenPack", 0.6f, 1f);
+                                SoundManager.PlayAudio("SFX_BoxOpen", 0.5f, 1f);
+                            }
                             __instance.m_StateIndex++;
                             return false;
                         }
@@ -543,7 +594,10 @@ namespace FastPackOpening
                     {
                         float num = 0.002f * (float)__instance.m_CurrentOpenedCardIndex;
                         float num2 = 0.001f * (float)__instance.m_CurrentOpenedCardIndex;
-                        SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num2, 1f + num);
+                        if (!Plugin.DisableSoundsValue)
+                        {
+                            SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num2, 1f + num);
+                        }
                         __instance.m_CardOpeningRotateToFrontAnim.Play("CardOpenSeq1_RotateToFront");
                         __instance.m_StateTimer = 0f;
                         __instance.m_StateIndex++;
@@ -580,7 +634,10 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
-                            SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
+                            }
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
                             __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
@@ -601,15 +658,24 @@ namespace FastPackOpening
                         float num5 = 0.001f * (float)__instance.m_CurrentOpenedCardIndex;
                         if (num3 == 0)
                         {
-                            SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num5, 1f + num4);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num5, 1f + num4);
+                            }
                         }
                         else if (num3 == 1)
                         {
-                            SoundManager.PlayAudio("SFX_CardReveal2", 0.6f + num5, 1f + num4);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_CardReveal2", 0.6f + num5, 1f + num4);
+                            }
                         }
                         else
                         {
-                            SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num5, 1f + num4);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num5, 1f + num4);
+                            }
                         }
                         if (__instance.m_CurrentOpenedCardIndex >= 7)
                         {
@@ -679,7 +745,10 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
-                            SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
+                            if (!Plugin.DisableSoundsValue)
+                            {
+                                SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
+                            }
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
                             __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
@@ -700,8 +769,11 @@ namespace FastPackOpening
                     DelayAutoOpen = false;
                     if (__instance.m_StateTimer == 0f && __instance.m_Slider == 0f)
                     {
-                        SoundManager.PlayAudio("SFX_PercStarJingle3", 0.6f, 1f);
-                        SoundManager.PlayAudio("SFX_Gift", 0.6f, 1f);
+                        if (!Plugin.DisableSoundsValue)
+                        {
+                            SoundManager.PlayAudio("SFX_PercStarJingle3", 0.6f, 1f);
+                            SoundManager.PlayAudio("SFX_Gift", 0.6f, 1f);
+                        }
                     }
                     __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
                     if (__instance.m_Slider >= 0.05f)
@@ -849,15 +921,24 @@ namespace FastPackOpening
                             float num10 = 0.001f * (float)__instance.m_CurrentOpenedCardIndex;
                             if (num8 == 0)
                             {
-                                SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num10, 1f + num9);
+                                if (!Plugin.DisableSoundsValue)
+                                {
+                                    SoundManager.PlayAudio("SFX_CardReveal1", 0.6f + num10, 1f + num9);
+                                }
                             }
                             else if (num8 == 1)
                             {
-                                SoundManager.PlayAudio("SFX_CardReveal2", 0.6f + num10, 1f + num9);
+                                if (!Plugin.DisableSoundsValue)
+                                {
+                                    SoundManager.PlayAudio("SFX_CardReveal2", 0.6f + num10, 1f + num9);
+                                }
                             }
                             else
                             {
-                                SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num10, 1f + num9);
+                                if (!Plugin.DisableSoundsValue)
+                                {
+                                    SoundManager.PlayAudio("SFX_CardReveal3", 0.6f + num10, 1f + num9);
+                                }
                             }
                             __instance.m_CurrentOpenedCardIndex++;
                             return false;

@@ -17,6 +17,7 @@ namespace FastPackOpening
         public static bool IsPackPositionsLoaded { get; set; }
         public static bool IsPackPositionsReordered { get; set; }
         public static ConfigEntry<bool> EnableMod { get; private set; }
+        public static ConfigEntry<bool> DisableSounds { get; private set; }
         public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
         public static ConfigEntry<float> PackResultsTimer { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
@@ -39,7 +40,12 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 8 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 9 }));
+
+            DisableSounds = Config.Bind("1. Config Options",
+                                    "Disable pack opening sounds",
+                                    false,
+                                    new ConfigDescription("Disables all sounds related to opening packs except high value cards.", null, new ConfigurationManagerAttributes { Order = 8 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
@@ -367,6 +373,10 @@ namespace FastPackOpening
         public static bool EnableModValue
         {
             get { return EnableMod.Value; }
+        }
+        public static bool DisableSoundsValue
+        {
+            get { return DisableSounds.Value; }
         }
         public static bool SkipPackEndScreenValue
         {
