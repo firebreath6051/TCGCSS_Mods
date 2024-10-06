@@ -346,6 +346,7 @@ namespace FastPackOpening
                 foreach (var card in __instance.m_CardAnimList)
                 {
                     card["OpenCardNewCard"].speed = 1f;
+                    card["OpenCardFinalReveal"].speed = 1f;
                 }
                 return true;
             }
@@ -362,6 +363,7 @@ namespace FastPackOpening
             foreach (var card in __instance.m_CardAnimList)
             {
                 card["OpenCardNewCard"].speed = Plugin.SpeedMultiplierValue;
+                card["OpenCardFinalReveal"].speed = Plugin.SpeedMultiplierValue;
             }
 
             if (PackSpeedMultiplier != (Plugin.SpeedMultiplierValue - __instance.m_MultiplierStateTimer))
