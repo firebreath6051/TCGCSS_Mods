@@ -151,6 +151,15 @@ namespace FastPackOpening
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
         {
+            if (Plugin.EnableAutoOpenStatusText.Value)
+            {
+                autoOpenStatusText.gameObject.SetActive(true);
+            }
+            else
+            {
+                autoOpenStatusText.gameObject.SetActive(false);
+            }
+
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.SetRotationAngles(0f, -35f);
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.enabled = false;
             if (CPlayerData.m_HoldItemTypeList.Count > 7 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
@@ -996,9 +1005,13 @@ namespace FastPackOpening
             {
                 IsAutoOpen = false;
                 DelayAutoOpen = false;
+                autoOpenStatusText.text = autoOpenBaseText + "Disabled";
+                autoOpenStatusText.color = Color.red;
                 return;
             }
             IsAutoOpen = true;
+            autoOpenStatusText.text = autoOpenBaseText + "Enabled";
+            autoOpenStatusText.color = Color.green;
         }
 
         [HarmonyPostfix]
@@ -1006,10 +1019,26 @@ namespace FastPackOpening
         public static void GameUIScreen_Update_Postfix(ref GameUIScreen __instance)
         {
             if (!Plugin.EnableModValue) return;
+
             if (holdItemCountText == null && __instance.m_DayText != null)
             {
-                DuplicateUIComponents(__instance);
+                DuplicateUIComponents(__instance, ref holdItemCountText, "HoldItemCountUI");
+                holdItemCountText.transform.localPosition = new Vector3(Plugin.HoldTextPositionX.Value, Plugin.HoldTextPositionY.Value, 0);
+                holdItemCountText.fontSizeMax = Plugin.HoldTextSize.Value;
+                holdItemCountText.fontSize = Plugin.HoldTextSize.Value;
+                holdItemCountText.fontSizeMin = 1f;
                 holdItemCountText.gameObject.SetActive(true);
+            }
+            if (autoOpenStatusText == null && __instance.m_DayText != null)
+            {
+                DuplicateUIComponents(__instance, ref autoOpenStatusText,"AutoOpenStatusUI");
+                autoOpenStatusText.transform.localPosition = new Vector3(Plugin.AutoTextPositionX.Value, Plugin.AutoTextPositionY.Value, 0);
+                autoOpenStatusText.text = autoOpenBaseText + (IsAutoOpen ? "Enabled" : "Disabled");
+                autoOpenStatusText.fontSizeMax = Plugin.AutoTextSize.Value;
+                autoOpenStatusText.fontSize = Plugin.AutoTextSize.Value;
+                autoOpenStatusText.fontSizeMin = 1f;
+                autoOpenStatusText.color = IsAutoOpen ? Color.green : Color.red;
+                autoOpenStatusText.gameObject.SetActive(true);
             }
             if (InteractionPlayerController.instance.m_HoldItemList.Count <= 0)
             {
@@ -1022,39 +1051,40 @@ namespace FastPackOpening
             return;
         }
 
+        public static readonly string autoOpenBaseText = "Auto Open ";
         public static TextMeshProUGUI holdItemCountText;
-        public static RectTransform holdItemCountRectTransform;
+        public static TextMeshProUGUI autoOpenStatusText;
         public static GameObject newGameObject;
 
-        public static void DuplicateUIComponents(GameUIScreen gameUIScreen)
+        public static void DuplicateUIComponents(GameUIScreen gameUIScreen, ref TextMeshProUGUI tmpro, string name)
         {
-            newGameObject = new GameObject("HoldItemCountUI");
+            newGameObject = new GameObject(name);
+            RectTransform newRectTransform;
             Transform newTransform = gameUIScreen.m_DayText.transform.GetComponentInParent<RectTransform>().transform.parent;
             newGameObject.transform.SetParent(newTransform, false);
 
-            holdItemCountRectTransform = newGameObject.AddComponent<RectTransform>();
+            newRectTransform = newGameObject.AddComponent<RectTransform>();
             RectTransform originalRectTransform = gameUIScreen.m_DayText.transform.GetComponentInParent<RectTransform>();
 
-            holdItemCountRectTransform.anchorMin = originalRectTransform.anchorMin;
-            holdItemCountRectTransform.anchorMax = originalRectTransform.anchorMax;
-            holdItemCountRectTransform.pivot = originalRectTransform.pivot;
-            holdItemCountRectTransform.anchoredPosition = originalRectTransform.anchoredPosition;
-            holdItemCountRectTransform.sizeDelta = originalRectTransform.sizeDelta;
+            newRectTransform.anchorMin = originalRectTransform.anchorMin;
+            newRectTransform.anchorMax = originalRectTransform.anchorMax;
+            newRectTransform.pivot = originalRectTransform.pivot;
+            newRectTransform.anchoredPosition = originalRectTransform.anchoredPosition;
+            newRectTransform.sizeDelta = originalRectTransform.sizeDelta;
 
-            holdItemCountRectTransform.anchorMin = new Vector2(0, 0);
-            holdItemCountRectTransform.anchorMax = new Vector2(1, 1);
-            holdItemCountRectTransform.pivot = new Vector2(0, 0);
-            holdItemCountRectTransform.anchoredPosition = Vector2.zero;
-            holdItemCountRectTransform.sizeDelta = new Vector2(200, 100);
+            newRectTransform.anchorMin = new Vector2(0, 0);
+            newRectTransform.anchorMax = new Vector2(1, 1);
+            newRectTransform.pivot = new Vector2(0, 0);
+            newRectTransform.anchoredPosition = Vector2.zero;
+            newRectTransform.sizeDelta = new Vector2(200, 100);
 
-            holdItemCountText = UnityEngine.Object.Instantiate(gameUIScreen.m_DayText, holdItemCountRectTransform);
-            holdItemCountText.text = "";
-            holdItemCountText.fontSizeMax = Plugin.TextSize.Value;
-            holdItemCountText.fontSize = Plugin.TextSize.Value;
-            holdItemCountText.fontSizeMin = 1f;
-            holdItemCountText.autoSizeTextContainer = false;
-            holdItemCountText.alignment = TextAlignmentOptions.Left;
-            holdItemCountText.transform.localPosition = new Vector3(Plugin.TextPositionX.Value, Plugin.TextPositionY.Value, 0);
+            tmpro = Object.Instantiate(gameUIScreen.m_DayText, newRectTransform);
+            tmpro.text = "";
+            tmpro.fontSizeMax = Plugin.HoldTextSize.Value;
+            tmpro.fontSize = Plugin.HoldTextSize.Value;
+            tmpro.fontSizeMin = 1f;
+            tmpro.autoSizeTextContainer = false;
+            tmpro.alignment = TextAlignmentOptions.Left;
         }
 
         public static void RemoveEmptyBoxes()

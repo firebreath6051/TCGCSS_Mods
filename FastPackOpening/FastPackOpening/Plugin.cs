@@ -16,23 +16,34 @@ namespace FastPackOpening
         private static ManualLogSource Log { get; set; }
         public static bool IsPackPositionsLoaded { get; set; }
         public static bool IsPackPositionsReordered { get; set; }
+
+        // Config Options
         public static ConfigEntry<bool> EnableMod { get; private set; }
         public static ConfigEntry<bool> DisableSounds { get; private set; }
-        public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
-        public static ConfigEntry<float> PackResultsTimer { get; private set; }
-        internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> RemoveBoxesKey { get; private set; }
+        public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
-        internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
-        internal static ConfigEntry<bool> StopAutoNewCard { get; private set; }
         internal static ConfigEntry<float> SpeedMultiplier { get; private set; }
         internal static ConfigEntry<float> PickupSpeedMultiplier { get; private set; }
-        internal static ConfigEntry<float> TextPositionX { get; private set; }
-        internal static ConfigEntry<float> TextPositionY { get; private set; }
-        internal static ConfigEntry<int> TextSize { get; private set; }
+
+        // Auto Open Options
+        internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
+        internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
+        internal static ConfigEntry<bool> StopAutoNewCard { get; private set; }
+        public static ConfigEntry<float> PackResultsTimer { get; private set; }
+        internal static ConfigEntry<bool> EnableAutoOpenStatusText { get; private set; }
+        internal static ConfigEntry<float> AutoTextPositionX { get; private set; }
+        internal static ConfigEntry<float> AutoTextPositionY { get; private set; }
+        internal static ConfigEntry<int> AutoTextSize { get; private set; }
+
+        // Held Pack Options
         public static ConfigEntry<bool> EnableMaxHoldPacks { get; private set; }
-        public static ConfigEntry<bool> EnableHeldItemPositions { get; private set; }
         internal static ConfigEntry<int> MaxHoldPacks { get; private set; }
+        public static ConfigEntry<bool> EnableHeldItemPositions { get; private set; }
+        internal static ConfigEntry<float> HoldTextPositionX { get; private set; }
+        internal static ConfigEntry<float> HoldTextPositionY { get; private set; }
+        internal static ConfigEntry<int> HoldTextSize { get; private set; }
+
         private void Awake()
         {
             Log = Logger;
@@ -42,42 +53,22 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 11 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
 
             DisableSounds = Config.Bind("1. Config Options",
                                     "Disable pack opening sounds",
                                     false,
-                                    new ConfigDescription("Disables all sounds related to opening packs except high value and new cards.", null, new ConfigurationManagerAttributes { Order = 10 }));
+                                    new ConfigDescription("Disables all sounds related to opening packs except high value and new cards.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             RemoveBoxesKey = Config.Bind("1. Config Options",
                                    "Remove empty boxes",
                                    new KeyboardShortcut(KeyCode.Delete),
-                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 9 }));
-
-            AutoOpenKey = Config.Bind("1. Config Options",
-                                   "Auto open toggle on/off",
-                                   new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 8 }));
-
-            StopAutoHighValue = Config.Bind("1. Config Options",
-                                    "Stop auto open at high value cards",
-                                    true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 7 }));
-
-            StopAutoNewCard = Config.Bind("1. Config Options",
-                                    "Stop auto open at new cards",
-                                    true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a new card.\nMake sure \"Show New Card\" is enabled in the game's settings.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 5 }));
 
             SkipPackEndScreen = Config.Bind("1. Config Options",
                                     "Speed up pack results screen",
                                     false,
-                                    new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 5 }));
-
-            PackResultsTimer = Config.Bind("1. Config Options",
-                                    "Pack results screen timer",
-                                    1f,
-                                    new ConfigDescription("Amount of time (in seconds) the pack results screen is displayed before auto open proceeds.", new AcceptableValueRange<float>(0, 10), new ConfigurationManagerAttributes { Order = 4 }));
+                                    new ConfigDescription("Speeds up the animation at the end of opening a pack.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
             HighValueThreshold = Config.Bind("1. Config Options",
                                     "High value threshold",
@@ -95,62 +86,79 @@ namespace FastPackOpening
                                          1f,
                                          new ConfigDescription("Speed multiplier for card pack pick up and put down.", new AcceptableValueRange<float>(1, 100), new ConfigurationManagerAttributes { Order = 1 }));
 
+            // Auto Open Options
+
+            AutoOpenKey = Config.Bind("2. Auto Open Options",
+                                   "Auto open toggle on/off",
+                                   new KeyboardShortcut(KeyCode.BackQuote),
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 7 }));
+
+            StopAutoHighValue = Config.Bind("2. Auto Open Options",
+                                    "Stop auto open at high value cards",
+                                    true,
+                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 7 }));
+
+            StopAutoNewCard = Config.Bind("2. Auto Open Options",
+                                    "Stop auto open at new cards",
+                                    true,
+                                    new ConfigDescription("Stops automatically opening packs when you get a new card.\nMake sure \"Show New Card\" is enabled in the game's settings.", null, new ConfigurationManagerAttributes { Order = 6 }));
+
+            PackResultsTimer = Config.Bind("2. Auto Open Options",
+                                    "Pack results screen timer",
+                                    1f,
+                                    new ConfigDescription("Amount of time (in seconds) the pack results screen is displayed before auto open proceeds.", new AcceptableValueRange<float>(0, 10), new ConfigurationManagerAttributes { Order = 5 }));
+
+            EnableAutoOpenStatusText = Config.Bind("2. Auto Open Options",
+                                    "Show auto open status text",
+                                    true,
+                                    new ConfigDescription("Enable text that displays if auto open is enabled.", null, new ConfigurationManagerAttributes { Order = 4 }));
+
+            AutoTextPositionX = Config.Bind("2. Auto Open Options",
+                                         "Text position X",
+                                         120f,
+                                         new ConfigDescription("X coordinate for auto open status.\nZero is bottom of the screen", new AcceptableValueRange<float>(0, Screen.currentResolution.width), new ConfigurationManagerAttributes { Order = 3 }));
+
+            AutoTextPositionY = Config.Bind("2. Auto Open Options",
+                                         "Text position Y",
+                                         985f,
+                                         new ConfigDescription("Y coordinate for the auto open status.\nZero is left side of the screen.", new AcceptableValueRange<float>(0, Screen.currentResolution.height), new ConfigurationManagerAttributes { Order = 2 }));
+
+            AutoTextSize = Config.Bind("2. Auto Open Options",
+                                         "Text size",
+                                         16,
+                                         new ConfigDescription("Text size for auto open status.", new AcceptableValueRange<int>(1, 32), new ConfigurationManagerAttributes { Order = 1 }));
+
             // Held Pack Options
 
-            EnableMaxHoldPacks = Config.Bind("2. Held Pack Options",
+            EnableMaxHoldPacks = Config.Bind("3. Held Pack Options",
                                     "Enable max hold limit",
                                     true,
                                     new ConfigDescription("Enable holding more than 8 packs", null, new ConfigurationManagerAttributes { Order = 6 }));
 
-            MaxHoldPacks = Config.Bind("2. Held Pack Options",
+            MaxHoldPacks = Config.Bind("3. Held Pack Options",
                                          "Held pack limit",
                                          8,
                                          new ConfigDescription("How many packs you can hold in your hand.", new AcceptableValueRange<int>(1, 1024), new ConfigurationManagerAttributes { Order = 5 }));
 
-            EnableHeldItemPositions = Config.Bind("2. Held Pack Options",
+            EnableHeldItemPositions = Config.Bind("3. Held Pack Options",
                                     "Enable hold item repositioning",
                                     false,
                                     new ConfigDescription("Makes held packs stack in several rows in your hands, instead of a single line.", null, new ConfigurationManagerAttributes { Order = 4 }));
 
-            TextPositionX = Config.Bind("2. Held Pack Options",
+            HoldTextPositionX = Config.Bind("3. Held Pack Options",
                                          "Text position X",
                                          120f,
                                          new ConfigDescription("X coordinate for the held item counter.\nZero is bottom of the screen", new AcceptableValueRange<float>(0, Screen.currentResolution.width), new ConfigurationManagerAttributes { Order = 3 }));
 
-            TextPositionY = Config.Bind("2. Held Pack Options",
+            HoldTextPositionY = Config.Bind("3. Held Pack Options",
                                          "Text position Y",
-                                         980f,
+                                         960f,
                                          new ConfigDescription("Y coordinate for the held item counter.\nZero is left side of the screen.", new AcceptableValueRange<float>(0, Screen.currentResolution.height), new ConfigurationManagerAttributes { Order = 2 }));
 
-            TextSize = Config.Bind("2. Held Pack Options",
+            HoldTextSize = Config.Bind("3. Held Pack Options",
                                          "Text size",
                                          26,
                                          new ConfigDescription("Text size for held item counter.", new AcceptableValueRange<int>(1, 32), new ConfigurationManagerAttributes { Order = 1 }));
-
-            EnableMaxHoldPacks.SettingChanged += (_, _) =>
-            {
-                if (EnableMaxHoldPacksValue && CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks", true))
-                {
-                    /*EnableMaxHoldPacks.Value = false;
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);*/
-                }
-                if (EnableMaxHoldPacksValue && !CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
-                {
-                    /*Harmony.Patch(
-                        AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)),
-                        prefix: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_OnGameDataFinishLoaded_Prefix))
-                    );
-                    Harmony.Patch(
-                        AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)),
-                        transpiler: new HarmonyMethod(typeof(Patches), nameof(Patches.InteractionPlayerController_EvaluateTakeItemFromShelf_Transpiler))
-                    );*/
-                }
-                if (!EnableMaxHoldPacks.Value && EnableHeldItemPositions.Value)
-                {
-                    EnableHeldItemPositions.Value = false;
-                }
-            };
 
             EnableMod.SettingChanged += (_, _) =>
             {
@@ -170,22 +178,55 @@ namespace FastPackOpening
                 PickupSpeedMultiplier.Value = (float)Math.Round(PickupSpeedMultiplier.Value, 1, MidpointRounding.AwayFromZero);
             };
 
-            TextPositionX.SettingChanged += (_, _) =>
+            HoldTextPositionX.SettingChanged += (_, _) =>
             {
-                TextPositionX.Value = (float)Math.Round(TextPositionX.Value, 2, MidpointRounding.AwayFromZero);
-                Patches.holdItemCountText.transform.localPosition = new Vector3(TextPositionX.Value, Patches.holdItemCountText.transform.localPosition.y, Patches.holdItemCountText.transform.localPosition.z);
+                HoldTextPositionX.Value = (float)Math.Round(HoldTextPositionX.Value, 2, MidpointRounding.AwayFromZero);
+                Patches.holdItemCountText.transform.localPosition = new Vector3(HoldTextPositionX.Value, Patches.holdItemCountText.transform.localPosition.y, Patches.holdItemCountText.transform.localPosition.z);
             };
 
-            TextPositionY.SettingChanged += (_, _) =>
+            HoldTextPositionY.SettingChanged += (_, _) =>
             {
-                TextPositionY.Value = (float)Math.Round(TextPositionY.Value, 2, MidpointRounding.AwayFromZero);
-                Patches.holdItemCountText.transform.localPosition = new Vector3(Patches.holdItemCountText.transform.localPosition.x, TextPositionY.Value, Patches.holdItemCountText.transform.localPosition.z);
+                HoldTextPositionY.Value = (float)Math.Round(HoldTextPositionY.Value, 2, MidpointRounding.AwayFromZero);
+                Patches.holdItemCountText.transform.localPosition = new Vector3(Patches.holdItemCountText.transform.localPosition.x, HoldTextPositionY.Value, Patches.holdItemCountText.transform.localPosition.z);
             };
 
-            TextSize.SettingChanged += (_, _) =>
+            HoldTextSize.SettingChanged += (_, _) =>
             {
-                Patches.holdItemCountText.fontSizeMax = TextSize.Value;
-                Patches.holdItemCountText.fontSize = TextSize.Value;
+                Patches.holdItemCountText.fontSizeMax = HoldTextSize.Value;
+                Patches.holdItemCountText.fontSize = HoldTextSize.Value;
+            };
+
+            EnableAutoOpenStatusText.SettingChanged += (_, _) =>
+            {
+                if (Patches.autoOpenStatusText != null)
+                {
+                    if (EnableAutoOpenStatusText.Value)
+                    {
+                        Patches.autoOpenStatusText.gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        Patches.autoOpenStatusText.gameObject.SetActive(false);
+                    }
+                }
+            };
+
+            AutoTextPositionX.SettingChanged += (_, _) =>
+            {
+                AutoTextPositionX.Value = (float)Math.Round(AutoTextPositionX.Value, 2, MidpointRounding.AwayFromZero);
+                Patches.autoOpenStatusText.transform.localPosition = new Vector3(AutoTextPositionX.Value, Patches.autoOpenStatusText.transform.localPosition.y, Patches.autoOpenStatusText.transform.localPosition.z);
+            };
+
+            AutoTextPositionY.SettingChanged += (_, _) =>
+            {
+                AutoTextPositionY.Value = (float)Math.Round(AutoTextPositionY.Value, 2, MidpointRounding.AwayFromZero);
+                Patches.autoOpenStatusText.transform.localPosition = new Vector3(Patches.autoOpenStatusText.transform.localPosition.x, AutoTextPositionY.Value, Patches.autoOpenStatusText.transform.localPosition.z);
+            };
+
+            AutoTextSize.SettingChanged += (_, _) =>
+            {
+                Patches.autoOpenStatusText.fontSizeMax = AutoTextSize.Value;
+                Patches.autoOpenStatusText.fontSize = AutoTextSize.Value;
             };
 
             EnableHeldItemPositions.SettingChanged += (_, _) =>
@@ -234,15 +275,6 @@ namespace FastPackOpening
             {
                 Patches.RemoveEmptyBoxes();
             }
-            /*if (EnableMaxHoldPacksValue)
-            {
-                if (CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
-                {
-                    EnableMaxHoldPacks.Value = false;
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded)), HarmonyPatchType.Prefix);
-                    Harmony.Unpatch(AccessTools.Method(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf)), HarmonyPatchType.Transpiler);
-                }
-            }*/
         }
 
         internal static List<Transform> MovePackPositions()
@@ -402,6 +434,8 @@ namespace FastPackOpening
         {
             get { return EnableMaxHoldPacks.Value; }
         }
+
+        // Incompatibility checks, unused for now
         private static readonly Dictionary<string, string> IncompatiblePlugins = new Dictionary<string, string>
         {
             { "HandIsNotFull", "EnableMaxHoldPacks" }
