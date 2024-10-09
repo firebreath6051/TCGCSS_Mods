@@ -2,11 +2,10 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using System.Reflection;
-using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 
-namespace SaveFileRescueMaybe
+namespace SaveFileRescue
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
@@ -21,17 +20,17 @@ namespace SaveFileRescueMaybe
             Log = Logger;
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
-            EnableMod = Config.Bind("Cheat Chances",
+            EnableMod = Config.Bind("Save File Rescue",
                                     "Enable mod",
                                     true,
                                     new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 9 }));
 
-            DeleteEmptyBoxes = Config.Bind("Cheat Chances",
+            DeleteEmptyBoxes = Config.Bind("Save File Rescue",
                                     "Delete empty boxes",
                                     true,
                                     new ConfigDescription("Deletes all empty boxes upon loading a save file.", null, new ConfigurationManagerAttributes { Order = 8 }));
 
-            DeleteCardPackBoxes = Config.Bind("Cheat Chances",
+            DeleteCardPackBoxes = Config.Bind("Save File Rescue",
                                     "Delete card pack boxes",
                                     true,
                                     new ConfigDescription("Deletes all boxes containing card packs upon loading a save file.", null, new ConfigurationManagerAttributes { Order = 7 }));

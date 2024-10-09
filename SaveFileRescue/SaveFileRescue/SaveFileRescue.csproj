@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <AssemblyName>SaveFileRescueMaybe</AssemblyName>
-    <Description>Save File Rescue Maybe</Description>
+    <AssemblyName>SaveFileRescue</AssemblyName>
+    <Description>Save File Rescue</Description>
     <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
@@ -41,6 +41,9 @@
     <Reference Include="netstandard">
       <HintPath>..\..\TCGCSS_Mods\libs\netstandard.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Postprocessing.Runtime">
+      <HintPath>..\..\TCGCSS_Mods\libs\Unity.Postprocessing.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\TCGCSS_Mods\libs\UnityEngine.dll</HintPath>

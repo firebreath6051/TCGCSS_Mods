@@ -15,6 +15,7 @@ namespace FastPackOpening
         public static bool IsFirstLoad = true;
         public static int PacksInHand { get; set; }
         public static float PackSpeedMultiplier { get; set; }
+        public static bool IsGetNewCard = false;
         public static float LogTimer { get; set; }
 
         [HarmonyPrefix]
@@ -404,9 +405,9 @@ namespace FastPackOpening
                 ToggleAutoOpen();
             }
 
+            __instance.m_HighValueCardThreshold = Plugin.HighValueThreshold.Value;
             __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq1_RotateToFront"].speed = Plugin.SpeedMultiplierValue;
             __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq0_Idle"].speed = Plugin.SpeedMultiplierValue;
-            __instance.m_HighValueCardThreshold = Plugin.HighValueThreshold.Value;
 
             foreach (var card in __instance.m_CardAnimList)
             {
@@ -634,10 +635,7 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
-                            if (!Plugin.DisableSoundsValue)
-                            {
-                                SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
-                            }
+                            SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
                             __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
@@ -651,9 +649,9 @@ namespace FastPackOpening
                 }
                 else if (__instance.m_StateIndex == 5)
                 {
-                    if (__instance.m_IsAutoFire || (!__instance.m_IsGetHighValueCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard))
+                    if (__instance.m_IsAutoFire || (!__instance.m_IsGetHighValueCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard) || (!IsGetNewCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard))
                     {
-                        int num3 = UnityEngine.Random.Range(0, 3);
+                        int num3 = Random.Range(0, 3);
                         float num4 = 0.002f * (float)__instance.m_CurrentOpenedCardIndex;
                         float num5 = 0.001f * (float)__instance.m_CurrentOpenedCardIndex;
                         if (num3 == 0)
@@ -745,10 +743,7 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
-                            if (!Plugin.DisableSoundsValue)
-                            {
-                                SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
-                            }
+                            SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
                             __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
@@ -776,30 +771,56 @@ namespace FastPackOpening
                         }
                     }
                     __instance.m_Slider += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
-                    if (__instance.m_Slider >= 0.05f)
+                    if (!Plugin.SkipPackEndScreenValue)
                     {
-                        __instance.m_Slider = 0f;
-                        __instance.m_CardAnimList[(int)__instance.m_StateTimer].transform.position = __instance.m_ShowAllCardPosList[(int)__instance.m_StateTimer].position;
-                        __instance.m_CardAnimList[(int)__instance.m_StateTimer].transform.rotation = __instance.m_ShowAllCardPosList[(int)__instance.m_StateTimer].rotation;
-                        __instance.m_Card3dUIList[(int)__instance.m_StateTimer].gameObject.SetActive(true);
-                        __instance.m_CardAnimList[(int)__instance.m_StateTimer].Play("OpenCardFinalReveal");
-                        __instance.m_StateTimer += 1f;
-                        if (__instance.m_StateTimer >= (float)__instance.m_Card3dUIList.Count)
+                        if (__instance.m_Slider >= 0.05f)
                         {
-                            __instance.m_StateTimer = 0f;
-                            __instance.m_StateIndex++;
-                            __instance.m_CardOpeningSequenceUI.StartShowTotalValue(__instance.m_TotalCardValue, __instance.m_HasFoilCard);
-                            return false;
+                            __instance.m_Slider = 0f;
+                            __instance.m_CardAnimList[(int)__instance.m_StateTimer].transform.position = __instance.m_ShowAllCardPosList[(int)__instance.m_StateTimer].position;
+                            __instance.m_CardAnimList[(int)__instance.m_StateTimer].transform.rotation = __instance.m_ShowAllCardPosList[(int)__instance.m_StateTimer].rotation;
+                            __instance.m_Card3dUIList[(int)__instance.m_StateTimer].gameObject.SetActive(true);
+                            __instance.m_CardAnimList[(int)__instance.m_StateTimer].Play("OpenCardFinalReveal");
+                            __instance.m_StateTimer += 1f;
+                            if (__instance.m_StateTimer >= (float)__instance.m_Card3dUIList.Count)
+                            {
+                                __instance.m_StateTimer = 0f;
+                                __instance.m_StateIndex++;
+                                __instance.m_CardOpeningSequenceUI.StartShowTotalValue(__instance.m_TotalCardValue, __instance.m_HasFoilCard);
+                                return false;
+                            }
                         }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < __instance.m_CardAnimList.Count; i++)
+                        {
+                            __instance.m_CardAnimList[i].transform.position = __instance.m_ShowAllCardPosList[i].position;
+                            __instance.m_CardAnimList[i].transform.rotation = __instance.m_ShowAllCardPosList[i].rotation;
+                            __instance.m_Card3dUIList[i].gameObject.SetActive(true);
+                        }
+                        __instance.m_StateTimer = 0f;
+                        __instance.m_StateIndex++;
+                        __instance.m_CardOpeningSequenceUI.StartShowTotalValue(__instance.m_TotalCardValue, __instance.m_HasFoilCard);
+                        return false;
                     }
                 }
                 else if (__instance.m_StateIndex == 8)
                 {
-                    __instance.m_StateTimer += Time.deltaTime;
+                    __instance.m_StateTimer += Time.deltaTime * (Plugin.SkipPackEndScreenValue ? Plugin.SpeedMultiplierValue : 1f);
                     if (__instance.m_StateTimer >= 0.02f)
                     {
                         __instance.m_Slider = 0f;
-                        __instance.m_Card3dUIList[(int)__instance.m_StateTimer].m_NewCardIndicator.gameObject.SetActive(__instance.m_RolledCardDataList[(int)__instance.m_StateTimer].isNew);
+                        if (Plugin.SkipPackEndScreenValue)
+                        {
+                            for (int i = 0; i < __instance.m_Card3dUIList.Count; i++)
+                            {
+                                __instance.m_Card3dUIList[i].m_NewCardIndicator.gameObject.SetActive(__instance.m_RolledCardDataList[i].isNew);
+                            }
+                        }
+                        else
+                        {
+                            __instance.m_Card3dUIList[(int)__instance.m_StateTimer].m_NewCardIndicator.gameObject.SetActive(__instance.m_RolledCardDataList[(int)__instance.m_StateTimer].isNew);
+                        }
                         __instance.m_StateTimer += 1f;
                         if (__instance.m_StateTimer >= (float)__instance.m_Card3dUIList.Count)
                         {
@@ -1016,6 +1037,29 @@ namespace FastPackOpening
             holdItemCountText.autoSizeTextContainer = false;
             holdItemCountText.alignment = TextAlignmentOptions.Left;
             holdItemCountText.transform.localPosition = new Vector3(Plugin.TextPositionX.Value, Plugin.TextPositionY.Value, 0);
+        }
+
+        public static void RemoveEmptyBoxes()
+        {
+            if (!Plugin.EnableModValue || !CSingleton<CGameManager>.Instance.m_IsGameLevel)
+            {
+                return;
+            }
+
+            List<InteractablePackagingBox_Item> boxList = Object.FindObjectsOfType<InteractablePackagingBox_Item>().ToList();
+
+            for (int i = 0; i < boxList.Count; i++)
+            {
+                if (!boxList[i].m_IsStored)
+                {
+                    if (boxList[i].m_ItemCompartment.m_ItemAmount == 0 && boxList[i] != InteractionPlayerController.Instance.m_CurrentHoldingItemBox)
+                    {
+                        Plugin.L($"box {i} item type: {boxList[i].m_ItemType} item count: {boxList[i].m_ItemCompartment.m_ItemAmount}");
+                        boxList[i].OnDestroyed();
+                    }
+                }
+            }
+            return;
         }
     }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Reflection;
 using System;
 
-namespace SaveFileRescueMaybe
+namespace SaveFileRescue
 {
     [HarmonyPatch]
     public class Patches

@@ -21,6 +21,7 @@ namespace FastPackOpening
         public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
         public static ConfigEntry<float> PackResultsTimer { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> AutoOpenKey { get; private set; }
+        internal static ConfigEntry<KeyboardShortcut> RemoveBoxesKey { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
         internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
         internal static ConfigEntry<float> SpeedMultiplier { get; private set; }
@@ -40,12 +41,17 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 9 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 10 }));
 
             DisableSounds = Config.Bind("1. Config Options",
                                     "Disable pack opening sounds",
                                     false,
-                                    new ConfigDescription("Disables all sounds related to opening packs except high value cards.", null, new ConfigurationManagerAttributes { Order = 8 }));
+                                    new ConfigDescription("Disables all sounds related to opening packs except high value cards.", null, new ConfigurationManagerAttributes { Order = 9 }));
+
+            RemoveBoxesKey = Config.Bind("1. Config Options",
+                                   "Remove empty boxes",
+                                   new KeyboardShortcut(KeyCode.Delete),
+                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 8 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
@@ -218,6 +224,10 @@ namespace FastPackOpening
 
         private void Update()
         {
+            if (RemoveBoxesKey.Value.IsDown())
+            {
+                Patches.RemoveEmptyBoxes();
+            }
             /*if (EnableMaxHoldPacksValue)
             {
                 if (CheckIfIncompatiblePluginsExist("EnableMaxHoldPacks"))
