@@ -15,7 +15,7 @@ namespace FastPackOpening
         public static bool IsFirstLoad = true;
         public static int PacksInHand { get; set; }
         public static float PackSpeedMultiplier { get; set; }
-        public static bool IsGetNewCard = false;
+        public static bool IsGetNewOrHighValueCard = false;
         public static float LogTimer { get; set; }
 
         [HarmonyPrefix]
@@ -623,6 +623,7 @@ namespace FastPackOpening
                                 IsAutoOpen = false;
                                 DelayAutoOpen = true;
                                 __instance.m_IsAutoFireKeydown = false;
+                                IsGetNewOrHighValueCard = true;
                             }
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
@@ -635,6 +636,13 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
+                            if (Plugin.StopAutoNewCard.Value && IsAutoOpen)
+                            {
+                                IsAutoOpen = false;
+                                DelayAutoOpen = true;
+                                __instance.m_IsAutoFireKeydown = false;
+                                IsGetNewOrHighValueCard = true;
+                            }
                             SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
@@ -649,7 +657,7 @@ namespace FastPackOpening
                 }
                 else if (__instance.m_StateIndex == 5)
                 {
-                    if (__instance.m_IsAutoFire || (!__instance.m_IsGetHighValueCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard) || (!IsGetNewCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard))
+                    if (__instance.m_IsAutoFire || (!IsGetNewOrHighValueCard && CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard))
                     {
                         int num3 = Random.Range(0, 3);
                         float num4 = 0.002f * (float)__instance.m_CurrentOpenedCardIndex;
@@ -689,6 +697,7 @@ namespace FastPackOpening
                             __instance.m_CardOpeningSequenceUI.HideSingleCardValue();
                         }
                         __instance.m_IsGetHighValueCard = false;
+                        IsGetNewOrHighValueCard = false;
                         if ((DelayAutoOpen && !IsAutoOpen) || (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex] && DelayAutoOpen && !IsAutoOpen))
                         {
                             IsAutoOpen = true;
@@ -731,6 +740,7 @@ namespace FastPackOpening
                                 IsAutoOpen = false;
                                 DelayAutoOpen = true;
                                 __instance.m_IsAutoFireKeydown = false;
+                                IsGetNewOrHighValueCard = true;
                             }
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
@@ -743,6 +753,13 @@ namespace FastPackOpening
                         }
                         if (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
                         {
+                            if (Plugin.StopAutoNewCard.Value && IsAutoOpen)
+                            {
+                                IsAutoOpen = false;
+                                DelayAutoOpen = true;
+                                __instance.m_IsAutoFireKeydown = false;
+                                IsGetNewOrHighValueCard = true;
+                            }
                             SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
@@ -975,9 +992,10 @@ namespace FastPackOpening
         }
         public static void ToggleAutoOpen()
         {
-            if (IsAutoOpen)
+            if (IsAutoOpen || DelayAutoOpen)
             {
                 IsAutoOpen = false;
+                DelayAutoOpen = false;
                 return;
             }
             IsAutoOpen = true;

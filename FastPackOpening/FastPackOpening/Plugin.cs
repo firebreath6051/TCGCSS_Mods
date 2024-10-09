@@ -24,6 +24,7 @@ namespace FastPackOpening
         internal static ConfigEntry<KeyboardShortcut> RemoveBoxesKey { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
         internal static ConfigEntry<bool> StopAutoHighValue { get; private set; }
+        internal static ConfigEntry<bool> StopAutoNewCard { get; private set; }
         internal static ConfigEntry<float> SpeedMultiplier { get; private set; }
         internal static ConfigEntry<float> PickupSpeedMultiplier { get; private set; }
         internal static ConfigEntry<float> TextPositionX { get; private set; }
@@ -41,27 +42,32 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 10 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 11 }));
 
             DisableSounds = Config.Bind("1. Config Options",
                                     "Disable pack opening sounds",
                                     false,
-                                    new ConfigDescription("Disables all sounds related to opening packs except high value cards.", null, new ConfigurationManagerAttributes { Order = 9 }));
+                                    new ConfigDescription("Disables all sounds related to opening packs except high value and new cards.", null, new ConfigurationManagerAttributes { Order = 10 }));
 
             RemoveBoxesKey = Config.Bind("1. Config Options",
                                    "Remove empty boxes",
                                    new KeyboardShortcut(KeyCode.Delete),
-                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 8 }));
+                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 9 }));
 
             AutoOpenKey = Config.Bind("1. Config Options",
                                    "Auto open toggle on/off",
                                    new KeyboardShortcut(KeyCode.BackQuote),
-                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 7 }));
+                                   new ConfigDescription("Key to toggle automatic opening of packs.", null, new ConfigurationManagerAttributes { Order = 8 }));
 
             StopAutoHighValue = Config.Bind("1. Config Options",
                                     "Stop auto open at high value cards",
                                     true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                    new ConfigDescription("Stops automatically opening packs when you get a high value card.", null, new ConfigurationManagerAttributes { Order = 7 }));
+
+            StopAutoNewCard = Config.Bind("1. Config Options",
+                                    "Stop auto open at new cards",
+                                    true,
+                                    new ConfigDescription("Stops automatically opening packs when you get a new card.\nMake sure \"Show new cards\" is enabled in the game's settings.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             SkipPackEndScreen = Config.Bind("1. Config Options",
                                     "Speed up pack results screen",
