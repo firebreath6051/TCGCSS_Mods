@@ -67,7 +67,7 @@ namespace FastPackOpening
             StopAutoNewCard = Config.Bind("1. Config Options",
                                     "Stop auto open at new cards",
                                     true,
-                                    new ConfigDescription("Stops automatically opening packs when you get a new card.\nMake sure \"Show new cards\" is enabled in the game's settings.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                    new ConfigDescription("Stops automatically opening packs when you get a new card.\nMake sure \"Show New Card\" is enabled in the game's settings.", null, new ConfigurationManagerAttributes { Order = 6 }));
 
             SkipPackEndScreen = Config.Bind("1. Config Options",
                                     "Speed up pack results screen",
