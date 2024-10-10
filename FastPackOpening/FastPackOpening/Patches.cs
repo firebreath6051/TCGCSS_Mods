@@ -265,17 +265,6 @@ namespace FastPackOpening
             return codes.AsEnumerable();
         }
 
-        /*[HarmonyPostfix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.EvaluateTakeItemFromShelf))]
-        public static void InteractionPlayerController_EvaluateTakeItemFromShelf_Postfix(ref InteractionPlayerController __instance)
-        {
-            if (__instance.m_HoldItemList[0].m_ItemType.ToString().Contains("CardPack"))
-            {
-            }
-
-            return;
-        }*/
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CardOpeningSequenceUI), nameof(CardOpeningSequenceUI.Update))]
         public static bool CardOpeningSequenceUI_Update_Prefix(ref CardOpeningSequenceUI __instance)
