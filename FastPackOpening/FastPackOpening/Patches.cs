@@ -84,48 +84,20 @@ namespace FastPackOpening
             return false;
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldItemState))]
-        public static bool InteractionPlayerController_RaycastHoldItemState_Prefix(ref InteractionPlayerController __instance, out float __state)
-        {
-            __state = __instance.m_MouseHoldAutoFireRate;
-            if (!Plugin.EnableMod.Value) return true;
-
-            __instance.m_MouseHoldAutoFireRate /= Plugin.PickupSpeedMultiplierValue;
-
-            return true;
-        }
-
         [HarmonyPostfix]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldItemState))]
         public static void InteractionPlayerController_RaycastHoldItemState_Postfix(ref InteractionPlayerController __instance, float __state)
         {
             if (!Plugin.EnableMod.Value) return;
 
-            __instance.m_MouseHoldAutoFireRate = __state;
-
-            return;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastNormalState))]
-        public static bool InteractionPlayerController_RaycastNormalState_Prefix(ref InteractionPlayerController __instance, out float __state)
-        {
-            __state = __instance.m_MouseHoldAutoFireRate;
-            if (!Plugin.EnableMod.Value) return true;
-
-            __instance.m_MouseHoldAutoFireRate /= Plugin.PickupSpeedMultiplierValue;
-
-            return true;
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastNormalState))]
-        public static void InteractionPlayerController_RaycastNormalState_Postfix(ref InteractionPlayerController __instance, float __state)
-        {
-            if (!Plugin.EnableMod.Value) return;
-
-            __instance.m_MouseHoldAutoFireRate = __state;
+            if (__instance.m_CurrentTrashBin)
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f;
+            }
+            else
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+            }
 
             return;
         }
@@ -136,6 +108,14 @@ namespace FastPackOpening
         {
             if (IsFirstLoad)
             {
+                if (Plugin.EnableMod.Value)
+                {
+                    __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+                }
+                else
+                {
+                    __instance.m_MouseHoldAutoFireRate = 0.15f;
+                }
                 __instance.m_HoldCardPackPosList = Plugin.MovePackPositions();
                 IsFirstLoad = false;
             }

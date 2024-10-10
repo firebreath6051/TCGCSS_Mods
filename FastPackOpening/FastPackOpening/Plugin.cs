@@ -166,6 +166,14 @@ namespace FastPackOpening
                 {
                     EnableHeldItemPositions.Value = false;
                 }
+                if (!EnableMod.Value && CSingleton<CGameManager>.Instance.m_IsGameLevel)
+                {
+                    CSingleton<InteractionPlayerController>.Instance.m_MouseHoldAutoFireRate = 0.15f;
+                }
+                if (EnableMod.Value && CSingleton<CGameManager>.Instance.m_IsGameLevel)
+                {
+                    CSingleton<InteractionPlayerController>.Instance.m_MouseHoldAutoFireRate = 0.15f / PickupSpeedMultiplier.Value;
+                }
             };
 
             SpeedMultiplier.SettingChanged += (_, _) =>
@@ -176,6 +184,10 @@ namespace FastPackOpening
             PickupSpeedMultiplier.SettingChanged += (_, _) =>
             {
                 PickupSpeedMultiplier.Value = (float)Math.Round(PickupSpeedMultiplier.Value, 1, MidpointRounding.AwayFromZero);
+                if (EnableMod.Value && CSingleton<CGameManager>.Instance.m_IsGameLevel)
+                {
+                    CSingleton<InteractionPlayerController>.Instance.m_MouseHoldAutoFireRate = 0.15f / PickupSpeedMultiplier.Value;
+                }
             };
 
             HoldTextPositionX.SettingChanged += (_, _) =>
