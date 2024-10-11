@@ -85,12 +85,66 @@ namespace FastPackOpening
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldItemState))]
-        public static void InteractionPlayerController_RaycastHoldItemState_Postfix(ref InteractionPlayerController __instance, float __state)
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldCardState))]
+        public static void InteractionPlayerController_RaycastHoldCardState_Postfix(ref InteractionPlayerController __instance)
         {
             if (!Plugin.EnableMod.Value) return;
 
             if (__instance.m_CurrentTrashBin)
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f;
+            }
+            else
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+            }
+
+            return;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldBoxState))]
+        public static void InteractionPlayerController_RaycastHoldBoxState_Postfix(ref InteractionPlayerController __instance)
+        {
+            if (!Plugin.EnableMod.Value) return;
+
+            if (__instance.m_CurrentTrashBin)
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f;
+            }
+            else
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+            }
+
+            return;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldItemState))]
+        public static void InteractionPlayerController_RaycastHoldItemState_Postfix(ref InteractionPlayerController __instance)
+        {
+            if (!Plugin.EnableMod.Value) return;
+
+            if (__instance.m_CurrentTrashBin)
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f;
+            }
+            else
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+            }
+
+            return;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastCashCounterState))]
+        public static void InteractionPlayerController_RaycastCashCounterState_Postfix(ref InteractionPlayerController __instance)
+        {
+            if (!Plugin.EnableMod.Value) return;
+
+            if (__instance.m_CurrentCashierCounter)
             {
                 __instance.m_MouseHoldAutoFireRate = 0.15f;
             }
@@ -126,20 +180,12 @@ namespace FastPackOpening
 
             return false;
         }
-
+        
         [HarmonyPostfix]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static void InteractionPlayerController_OnGameDataFinishLoaded_Postfix(ref InteractionPlayerController __instance)
         {
-            if (Plugin.EnableAutoOpenStatusText.Value)
-            {
-                autoOpenStatusText.gameObject.SetActive(true);
-            }
-            else
-            {
-                autoOpenStatusText.gameObject.SetActive(false);
-            }
-
+            AchievementManager.OnCheckAlbumCardCount(CPlayerData.GetTotalCardCollectedAmount());
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.SetRotationAngles(0f, -35f);
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.enabled = false;
             if (CPlayerData.m_HoldItemTypeList.Count > 7 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
@@ -360,6 +406,17 @@ namespace FastPackOpening
             return;
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CardOpeningSequenceUI), nameof(CardOpeningSequenceUI.StartShowTotalValue))]
+        public static void CardOpeningSequenceUI_StartShowTotalValue_Postfix(ref CardOpeningSequenceUI __instance)
+        {
+            if (!Plugin.EnableMod.Value || Plugin.PackResultsTimer.Value >= 1f) return;
+
+            __instance.m_FoilRainbowGlowingBG.SetActive(false);
+
+            return;
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CardOpeningSequence), nameof(CardOpeningSequence.Update))]
         public static bool CardOpeningSequence_Update_Prefix(ref CardOpeningSequence __instance)
@@ -562,12 +619,12 @@ namespace FastPackOpening
                 }
                 else if (__instance.m_StateIndex == 3)
                 {
-                    __instance.m_Slider += Time.deltaTime * 1f * (__instance.m_MultiplierStateTimer + PackSpeedMultiplier);
+                    __instance.m_Slider += Time.deltaTime * 1f * __instance.m_MultiplierStateTimer;
                     if (__instance.m_Slider >= 0.15f)
                     {
                         __instance.m_Slider = 0f;
-                        __instance.m_StateIndex++;
                         __instance.m_CardOpeningRotateToFrontAnim.Play("CardOpenSeq1_RotateToFront");
+                        __instance.m_StateIndex++;
                     }
                     if (__instance.m_IsAutoFire || CSingleton<CGameManager>.Instance.m_OpenPacAutoNextCard)
                     {
@@ -586,7 +643,11 @@ namespace FastPackOpening
                 else if (__instance.m_StateIndex == 4)
                 {
                     __instance.m_Slider += Time.deltaTime * 1f * (__instance.m_MultiplierStateTimer + PackSpeedMultiplier);
-                    if (!__instance.m_CardOpeningSequenceUI.m_CardValueTextGrp.activeSelf && __instance.m_CurrentOpenedCardIndex < 6 && __instance.m_Slider >= 0.45f && !__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex])
+                    if (!__instance.m_CardOpeningSequenceUI.m_CardValueTextGrp.activeSelf
+                        && __instance.m_CurrentOpenedCardIndex < 6
+                        && __instance.m_Slider >= 0.45f
+                        && !__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex]
+                        && __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex] < __instance.m_HighValueCardThreshold)
                     {
                         __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                         __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
@@ -606,7 +667,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_FinalizeCard", 0.6f, 1.2f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_HighValueCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             __instance.m_IsGetHighValueCard = true;
@@ -624,7 +685,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_CardReveal0", 0.6f, 1f);
                             __instance.m_CardAnimList[__instance.m_CurrentOpenedCardIndex].Play("OpenCardNewCard");
                             __instance.m_NewCardIcon.SetActive(true);
-                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f / Plugin.SpeedMultiplierValue));
+                            __instance.StartCoroutine(__instance.DelayToState(5, 0.9f));
                             __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex];
                             __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex]);
                             return false;
@@ -675,19 +736,23 @@ namespace FastPackOpening
                             __instance.m_CardOpeningSequenceUI.HideSingleCardValue();
                         }
                         __instance.m_IsGetHighValueCard = false;
-                        IsGetNewOrHighValueCard = false;
-                        if ((DelayAutoOpen && !IsAutoOpen) || (__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex] && DelayAutoOpen && !IsAutoOpen))
+                        if (DelayAutoOpen && !IsAutoOpen)
                         {
                             IsAutoOpen = true;
+                            DelayAutoOpen = false;
                         }
-                        DelayAutoOpen = false;
+                        IsGetNewOrHighValueCard = false;
                         return false;
                     }
                 }
                 else if (__instance.m_StateIndex == 6)
                 {
                     __instance.m_Slider += Time.deltaTime * 1f * (__instance.m_MultiplierStateTimer + PackSpeedMultiplier);
-                    if (!__instance.m_CardOpeningSequenceUI.m_CardValueTextGrp.activeSelf && __instance.m_CurrentOpenedCardIndex < 6 && __instance.m_Slider >= 0.3f && !__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex + 1] && __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex + 1] < __instance.m_HighValueCardThreshold)
+                    if (!__instance.m_CardOpeningSequenceUI.m_CardValueTextGrp.activeSelf
+                        && __instance.m_CurrentOpenedCardIndex < 6
+                        && __instance.m_Slider >= 0.3f
+                        && !__instance.m_IsNewlList[__instance.m_CurrentOpenedCardIndex + 1]
+                        && __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex + 1] < __instance.m_HighValueCardThreshold)
                     {
                         __instance.m_TotalCardValue += __instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex + 1];
                         __instance.m_CardOpeningSequenceUI.ShowSingleCardValue(__instance.m_CardValueList[__instance.m_CurrentOpenedCardIndex + 1]);
@@ -1016,6 +1081,11 @@ namespace FastPackOpening
             else if (InteractionPlayerController.instance.m_HoldItemList[0].m_ItemType.ToString().Contains("CardPack"))
             {
                 holdItemCountText.text = "Held packs: " + InteractionPlayerController.instance.m_HoldItemList.Count.ToString();
+            }
+
+            if (!Plugin.EnableAutoOpenStatusText.Value && autoOpenStatusText.gameObject.activeSelf)
+            {
+                autoOpenStatusText.gameObject.SetActive(false);
             }
             return;
         }
