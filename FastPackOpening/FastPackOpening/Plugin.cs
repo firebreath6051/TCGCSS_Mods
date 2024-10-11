@@ -16,11 +16,13 @@ namespace FastPackOpening
         private static ManualLogSource Log { get; set; }
         public static bool IsPackPositionsLoaded { get; set; }
         public static bool IsPackPositionsReordered { get; set; }
+        public static bool isBoxesOpen = false;
 
         // Config Options
         public static ConfigEntry<bool> EnableMod { get; private set; }
         public static ConfigEntry<bool> DisableSounds { get; private set; }
         internal static ConfigEntry<KeyboardShortcut> RemoveBoxesKey { get; private set; }
+        internal static ConfigEntry<KeyboardShortcut> OpenBoxesKey { get; private set; }
         public static ConfigEntry<bool> SkipPackEndScreen { get; private set; }
         internal static ConfigEntry<int> HighValueThreshold { get; private set; }
         internal static ConfigEntry<float> SpeedMultiplier { get; private set; }
@@ -53,17 +55,22 @@ namespace FastPackOpening
             EnableMod = Config.Bind("1. Config Options",
                                     "Enable mod",
                                     true,
-                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 7 }));
+                                    new ConfigDescription("Enable this mod", null, new ConfigurationManagerAttributes { Order = 8 }));
 
             DisableSounds = Config.Bind("1. Config Options",
                                     "Disable pack opening sounds",
                                     false,
-                                    new ConfigDescription("Disables all sounds related to opening packs except high value and new cards.", null, new ConfigurationManagerAttributes { Order = 6 }));
+                                    new ConfigDescription("Disables all sounds related to opening packs except high value and new cards.", null, new ConfigurationManagerAttributes { Order = 7 }));
 
             RemoveBoxesKey = Config.Bind("1. Config Options",
                                    "Remove empty boxes",
                                    new KeyboardShortcut(KeyCode.Delete),
-                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 5 }));
+                                   new ConfigDescription("Key to remove all empty boxes.", null, new ConfigurationManagerAttributes { Order = 6 }));
+
+            OpenBoxesKey = Config.Bind("1. Config Options",
+                                   "Open/Close all boxes",
+                                   new KeyboardShortcut(KeyCode.O),
+                                   new ConfigDescription("Key to open/close all boxes.", null, new ConfigurationManagerAttributes { Order = 5 }));
 
             SkipPackEndScreen = Config.Bind("1. Config Options",
                                     "Speed up pack results screen",
@@ -283,9 +290,17 @@ namespace FastPackOpening
 
         private void Update()
         {
+            if (isBoxesOpen && !CSingleton<CGameManager>.Instance.m_IsGameLevel)
+            {
+                isBoxesOpen = false;
+            }
             if (RemoveBoxesKey.Value.IsDown())
             {
                 Patches.RemoveEmptyBoxes();
+            }
+            if (OpenBoxesKey.Value.IsDown())
+            {
+                Patches.OpenCloseAllBoxes(isBoxesOpen);
             }
         }
 

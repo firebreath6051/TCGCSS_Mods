@@ -1149,6 +1149,7 @@ namespace FastPackOpening
             {
                 return;
             }
+            bool isSoundPlayed = false;
 
             List<InteractablePackagingBox_Item> boxList = Object.FindObjectsOfType<InteractablePackagingBox_Item>().ToList();
 
@@ -1158,10 +1159,55 @@ namespace FastPackOpening
                 {
                     if (boxList[i].m_ItemCompartment.m_ItemAmount == 0 && boxList[i] != InteractionPlayerController.Instance.m_CurrentHoldingItemBox)
                     {
-                        Plugin.L($"box {i} item type: {boxList[i].m_ItemType} item count: {boxList[i].m_ItemCompartment.m_ItemAmount}");
                         boxList[i].OnDestroyed();
                     }
+                    if (!isSoundPlayed)
+                    {
+                        SoundManager.PlayAudio("SFX_Dispose", 0.6f, 1f);
+                        isSoundPlayed = true;
+                    }
                 }
+            }
+            return;
+        }
+
+        public static void OpenCloseAllBoxes(bool isClose)
+        {
+            if (!Plugin.EnableModValue || !CSingleton<CGameManager>.Instance.m_IsGameLevel)
+            {
+                return;
+            }
+            bool isSoundPlayed = false;
+
+            List<InteractablePackagingBox_Item> boxList = Object.FindObjectsOfType<InteractablePackagingBox_Item>().ToList();
+
+            for (int i = 0; i < boxList.Count; i++)
+            {
+                if (boxList[i] != InteractionPlayerController.Instance.m_CurrentHoldingItemBox && !boxList[i].m_IsTogglingOpenClose && !boxList[i].m_IsStored)
+                {
+                    if (!isClose && !boxList[i].IsBoxOpened())
+                    {
+                        boxList[i].SetOpenCloseBox(true, false);
+                        if (!isSoundPlayed)
+                        {
+                            SoundManager.PlayAudio("SFX_BoxOpen", 0.5f);
+                            isSoundPlayed = true;
+                        }
+                    }
+                    if (isClose && boxList[i].IsBoxOpened())
+                    {
+                        boxList[i].SetOpenCloseBox(false, false);
+                        if (!isSoundPlayed)
+                        {
+                            SoundManager.PlayAudio("SFX_BoxClose", 0.5f);
+                            isSoundPlayed = true;
+                        }
+                    }
+                }
+            }
+            if (isSoundPlayed)
+            {
+                Plugin.isBoxesOpen = !Plugin.isBoxesOpen;
             }
             return;
         }
