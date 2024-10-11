@@ -16,6 +16,7 @@ namespace FastPackOpening
         public static int PacksInHand { get; set; }
         public static float PackSpeedMultiplier { get; set; }
         public static bool IsGetNewOrHighValueCard = false;
+        public static bool IsCancelPackQueued = false;
         public static float LogTimer { get; set; }
 
         [HarmonyPrefix]
@@ -439,7 +440,10 @@ namespace FastPackOpening
             {
                 ToggleAutoOpen();
             }
-
+            if (InputManager.GetKeyDownAction(EGameAction.CancelOpenPack) && __instance.m_StateIndex >= 2 && __instance.m_StateIndex < 10)
+            {
+                IsCancelPackQueued = true;
+            }
             __instance.m_HighValueCardThreshold = Plugin.HighValueThreshold.Value;
             __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq1_RotateToFront"].speed = Plugin.SpeedMultiplierValue;
             __instance.m_CardOpeningRotateToFrontAnim["CardOpenSeq0_Idle"].speed = Plugin.SpeedMultiplierValue;
@@ -530,13 +534,13 @@ namespace FastPackOpening
                     __instance.m_CardPackAnimator.transform.localScale = Vector3.Lerp(__instance.m_StartLerpTransform.localScale, Vector3.one, __instance.m_LerpPosTimer);
                     return false;
                 }
-                if (__instance.m_IsAutoFire)
+                if (__instance.m_IsAutoFire && !IsCancelPackQueued)
                 {
                     __instance.m_IsReadyingToOpen = false;
                     __instance.OpenScreen(InventoryBase.ItemTypeToCollectionPackType(__instance.m_CurrentItem.GetItemType()), false, false);
                     return false;
                 }
-                if (InputManager.GetKeyDownAction(EGameAction.CancelOpenPack) && !__instance.m_IsCanceling)
+                if ((InputManager.GetKeyDownAction(EGameAction.CancelOpenPack) && !__instance.m_IsCanceling) || IsCancelPackQueued)
                 {
                     CSingleton<InteractionPlayerController>.Instance.AddHoldItemToFront(__instance.m_CurrentItem);
                     __instance.m_IsCanceling = true;
@@ -545,6 +549,7 @@ namespace FastPackOpening
                     InteractionPlayerController.RestoreHiddenToolTip();
                     CSingleton<InteractionPlayerController>.Instance.m_CameraFOVController.StopLerpFOV();
                     SoundManager.GenericPop(1f, 0.9f);
+                    IsCancelPackQueued = false;
                 }
                 return false;
             }
