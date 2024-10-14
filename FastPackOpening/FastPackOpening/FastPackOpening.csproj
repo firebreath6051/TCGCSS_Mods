@@ -4,7 +4,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>FastPackOpening</AssemblyName>
     <Description>Faster Card Pack Opening</Description>
-    <Version>1.1.6</Version>
+    <Version>1.1.8</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <BaseOutputPath>C:\Users\diogo\source\repos\TCGCSS_Mods\bin</BaseOutputPath>

@@ -157,6 +157,24 @@ namespace FastPackOpening
             return;
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.RaycastHoldSprayState))]
+        public static void InteractionPlayerController_RaycastHoldSprayState_Postfix(ref InteractionPlayerController __instance)
+        {
+            if (!Plugin.EnableMod.Value) return;
+
+            if (__instance.m_IsHoldSprayMode)
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f;
+            }
+            else
+            {
+                __instance.m_MouseHoldAutoFireRate = 0.15f / Plugin.PickupSpeedMultiplierValue;
+            }
+
+            return;
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InteractionPlayerController), nameof(InteractionPlayerController.OnGameDataFinishLoaded))]
         public static bool InteractionPlayerController_OnGameDataFinishLoaded_Prefix(ref InteractionPlayerController __instance)
@@ -189,7 +207,7 @@ namespace FastPackOpening
             AchievementManager.OnCheckAlbumCardCount(CPlayerData.GetTotalCardCollectedAmount());
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.SetRotationAngles(0f, -35f);
             CSingleton<InteractionPlayerController>.Instance.m_CameraController.enabled = false;
-            if (CPlayerData.m_HoldItemTypeList.Count > 7 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("CardPack"))
+            if (CPlayerData.m_HoldItemTypeList.Count > 7 && !CPlayerData.m_HoldItemTypeList[0].ToString().Contains("Pack"))
             {
                 for (int i = CPlayerData.m_HoldItemTypeList.Count - 1; i >= 8; i--)
                 {
@@ -1095,7 +1113,7 @@ namespace FastPackOpening
             {
                 holdItemCountText.text = "";
             }
-            else if (InteractionPlayerController.instance.m_HoldItemList[0].m_ItemType.ToString().Contains("CardPack"))
+            else if (InteractionPlayerController.instance.m_HoldItemList[0].m_ItemType.ToString().Contains("Pack"))
             {
                 holdItemCountText.text = "Held packs: " + InteractionPlayerController.instance.m_HoldItemList.Count.ToString();
             }
@@ -1160,11 +1178,11 @@ namespace FastPackOpening
                     if (boxList[i].m_ItemCompartment.m_ItemAmount == 0 && boxList[i] != InteractionPlayerController.Instance.m_CurrentHoldingItemBox)
                     {
                         boxList[i].OnDestroyed();
-                    }
-                    if (!isSoundPlayed)
-                    {
-                        SoundManager.PlayAudio("SFX_Dispose", 0.6f, 1f);
-                        isSoundPlayed = true;
+                        if (!isSoundPlayed)
+                        {
+                            SoundManager.PlayAudio("SFX_Dispose", 0.6f, 1f);
+                            isSoundPlayed = true;
+                        }
                     }
                 }
             }
@@ -1193,6 +1211,7 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_BoxOpen", 0.5f);
                             isSoundPlayed = true;
                         }
+                        Plugin.isBoxesOpen = true;
                     }
                     if (isClose && boxList[i].IsBoxOpened())
                     {
@@ -1202,12 +1221,9 @@ namespace FastPackOpening
                             SoundManager.PlayAudio("SFX_BoxClose", 0.5f);
                             isSoundPlayed = true;
                         }
+                        Plugin.isBoxesOpen = false;
                     }
                 }
-            }
-            if (isSoundPlayed)
-            {
-                Plugin.isBoxesOpen = !Plugin.isBoxesOpen;
             }
             return;
         }
