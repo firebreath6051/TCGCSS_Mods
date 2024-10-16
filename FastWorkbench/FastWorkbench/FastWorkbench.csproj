@@ -4,7 +4,7 @@
     <TargetFramework>net462</TargetFramework>
     <AssemblyName>FastWorkbench</AssemblyName>
     <Description>Movable Trash Bin</Description>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <BaseOutputPath>C:\Users\diogo\source\repos\TCGCSS_Mods\bin</BaseOutputPath>
@@ -36,7 +36,6 @@
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\TCGCSS_Mods\libs\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>libs\BepInEx.dll</HintPath>
@@ -131,4 +130,13 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="xcopy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;D:\Games\Steam\steamapps\common\TCG Card Shop Simulator\BepInEx\plugins\FastWorkbench&quot; /Y" />
+	</Target>
+
+	<Target Name="RunExeAfterBuild" AfterTargets="Build">
+		<Exec Command="&quot;D:\Games\Steam\Steam.exe&quot; -applaunch 3070070" />
+	</Target>
+	
 </Project>
