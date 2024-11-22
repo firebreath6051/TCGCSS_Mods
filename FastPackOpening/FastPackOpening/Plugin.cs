@@ -86,12 +86,12 @@ namespace FastPackOpening
             SpeedMultiplier = Config.Bind("1. Config Options",
                                          "Speed multiplier",
                                          1f,
-                                         new ConfigDescription("Speed multiplier", new AcceptableValueRange<float>(1, 100), new ConfigurationManagerAttributes { Order = 2 }));
+                                         new ConfigDescription("Speed multiplier", new AcceptableValueRange<float>(1, 1000), new ConfigurationManagerAttributes { Order = 2 }));
 
             PickupSpeedMultiplier = Config.Bind("1. Config Options",
                                          "Pickup speed multiplier",
                                          1f,
-                                         new ConfigDescription("Speed multiplier for card pack pick up and put down.", new AcceptableValueRange<float>(1, 100), new ConfigurationManagerAttributes { Order = 1 }));
+                                         new ConfigDescription("Speed multiplier for card pack pick up and put down.", new AcceptableValueRange<float>(1, 1000), new ConfigurationManagerAttributes { Order = 1 }));
 
             // Auto Open Options
 
